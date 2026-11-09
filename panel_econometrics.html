@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Data Econometrics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --paper:#f5f3ee; --card:#ffffff; --ink:#1c2331; --ink-2:#4a5263; --ink-3:#7d8596;
+  --line:#e2ded5; --line-2:#cfc9bc;
+  --accent:#1f4e79; --accent-2:#163a5b; --accent-soft:#e6eef6;
+  --warm:#b5562c; --warm-soft:#f8ece5;
+  --good:#2e7d5b; --good-soft:#e5f2ec; --bad:#a33b3b; --bad-soft:#f7e6e6;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'IBM Plex Sans Thai',system-ui,sans-serif;
+  --r:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6}
+button{font-family:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+header.top{background:var(--ink);color:#fff;padding:22px 0 26px;border-bottom:4px solid var(--warm)}
+.top .wrap{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.brand small{display:block;font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#c9b8a6;margin-bottom:4px}
+.brand h1{margin:0;font-size:26px;font-weight:600;line-height:1.3}
+.brand p{margin:6px 0 0;color:#b9c0cc;font-size:14px}
+.top-actions{display:flex;gap:10px;align-items:center}
+.lang{display:inline-flex;border:1px solid #4b5568;border-radius:999px;overflow:hidden}
+.lang button{background:transparent;color:#cfd5df;border:0;padding:7px 16px;cursor:pointer;font-weight:600;font-size:13px}
+.lang button.on{background:#fff;color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-2);background:#fff;color:var(--ink);padding:9px 16px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;transition:.15s}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-2);color:#fff}
+.btn.warm{background:var(--warm);border-color:var(--warm);color:#fff}
+.btn.warm:hover{filter:brightness(.92);color:#fff}
+.btn.ghost-dark{background:transparent;color:#fff;border-color:#4b5568}
+.btn.ghost-dark:hover{border-color:#fff;color:#fff}
+.btn.big{padding:13px 30px;font-size:16px;font-weight:600}
+.btn.sm{padding:6px 12px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+main{padding:28px 0 60px}
+section.step{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;margin-bottom:22px}
+.step-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.step-n{width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-weight:500;flex:none}
+.step-h h2{margin:0;font-size:19px;font-weight:600}
+.methods{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.mcard{text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:var(--r);padding:18px;cursor:pointer;transition:.15s;position:relative}
+.mcard:hover{border-color:var(--accent)}
+.mcard.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px rgba(31,78,121,.12)}
+.mcard .tag{font-family:var(--mono);font-size:11px;color:var(--warm);letter-spacing:.08em;text-transform:uppercase}
+.mcard h3{margin:4px 0 8px;font-size:16.5px;font-weight:600;color:var(--ink)}
+.mcard p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.mcard .chk{position:absolute;top:14px;right:14px;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center;font-size:12px;color:#fff}
+.mcard.on .chk{background:var(--accent);border-color:var(--accent)}
+.drop{border:2px dashed var(--line-2);border-radius:var(--r);padding:26px;text-align:center;cursor:pointer;background:#fbfaf7;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop .ico{font-size:28px;line-height:1;margin-bottom:6px;color:var(--accent)}
+.drop .fn{margin-top:8px;font-family:var(--mono);font-size:13px;color:var(--good)}
+.row-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.hint{font-size:13px;color:var(--ink-3);margin-top:10px}
+.hidden{display:none!important}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+.panel-box{border:1px solid var(--line);border-radius:10px;padding:16px;background:#fcfbf8}
+.panel-box h4{margin:0 0 12px;font-size:15px;font-weight:600}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;color:var(--ink-2);margin-bottom:4px;font-weight:500}
+select{width:100%;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;font-family:inherit;font-size:14px;background:#fff;color:var(--ink)}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.checks label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);border-radius:999px;padding:4px 12px;font-size:13px;cursor:pointer;background:#fff;margin:0;color:var(--ink)}
+.checks input{accent-color:var(--accent)}
+.opt-line{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:10px}
+.opt-line input{accent-color:var(--accent);width:16px;height:16px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+table.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+table.dt th{background:#f1eee7;font-weight:600;text-align:right;padding:8px 12px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+table.dt th:first-child,table.dt td:first-child{text-align:left}
+table.dt td{padding:7px 12px;border-bottom:1px solid #efece5;text-align:right;font-family:var(--mono);font-size:13px;white-space:nowrap}
+table.dt td.txt{font-family:var(--sans);white-space:normal;text-align:left;min-width:160px}
+table.dt tr:last-child td{border-bottom:0}
+table.dt tr:hover td{background:#faf8f3}
+.preview-meta{font-size:13px;color:var(--ink-2);margin:0 0 8px}
+.process-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.msg{padding:10px 14px;border-radius:8px;font-size:14px;margin-top:12px}
+.msg.err{background:var(--bad-soft);color:var(--bad);border:1px solid #e9c3c3}
+.msg.info{background:var(--accent-soft);color:var(--accent-2);border:1px solid #c8d8ea}
+.msg.ok{background:var(--good-soft);color:var(--good);border:1px solid #bfdccd}
+.spinner{width:18px;height:18px;border:2.5px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.res-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:18px}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border:0;background:transparent;padding:10px 18px;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink-2)}
+.seg button.on{background:var(--ink);color:#fff}
+.summary{background:var(--warm-soft);border-left:4px solid var(--warm);border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:14px}
+.summary b{color:var(--warm)}
+.summary ul{margin:6px 0 0;padding-left:20px}
+.tcard{margin-bottom:28px}
+.tcard h3{font-size:16.5px;margin:0 0 4px;font-weight:600;display:flex;gap:10px;align-items:baseline}
+.tcard h3 .no{font-family:var(--mono);font-size:12px;color:var(--warm);background:var(--warm-soft);padding:2px 8px;border-radius:6px}
+.tcard .sub{font-size:13px;color:var(--ink-3);margin:0 0 10px}
+.notes{margin-top:10px;background:#fbfaf7;border:1px solid var(--line);border-radius:10px;padding:12px 16px;font-size:13.5px;color:var(--ink-2)}
+.notes .nh{font-weight:600;color:var(--ink);margin-bottom:4px;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.notes dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:4px 14px}
+.notes dt{font-weight:600;color:var(--accent-2);font-family:var(--mono);font-size:12.5px;padding-top:1px}
+.notes dd{margin:0}
+.interp{margin-top:10px;border-left:3px solid var(--good);background:var(--good-soft);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13.5px}
+.interp div+div{margin-top:4px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.ccard{border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:16px;display:flex;flex-direction:column}
+.ccard .ch{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.ccard h4{margin:0;font-size:15px;font-weight:600}
+.ccard p{margin:2px 0 10px;font-size:12.5px;color:var(--ink-3)}
+.ccard .cv{position:relative;height:320px}
+.pos{color:var(--good);font-weight:600}
+.neg{color:var(--bad);font-weight:600}
+footer{font-size:12.5px;color:var(--ink-3);padding:10px 0 40px}
+footer .wrap{border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:900px){.methods{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.charts{grid-template-columns:1fr}}
+@media (max-width:520px){.wrap{padding:0 14px}section.step{padding:18px}.brand h1{font-size:21px}.notes dl{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <small>Panel Data Econometrics</small>
+      <h1 data-i18n="title"></h1>
+      <p data-i18n="subtitle"></p>
+    </div>
+    <div class="top-actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button id="lang-th" class="on">ไทย</button>
+        <button id="lang-en">English</button>
+      </div>
+      <button class="btn ghost-dark" id="btnResetTop">↺ <span data-i18n="reset"></span></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- STEP 1 -->
+  <section class="step">
+    <div class="step-h"><div class="step-n">1</div><h2 data-i18n="s1"></h2></div>
+    <div class="methods">
+      <button class="mcard" data-method="fere"><span class="chk">✓</span><div class="tag">FEM · REM</div><h3 data-i18n="m1t"></h3><p data-i18n="m1d"></p></button>
+      <button class="mcard" data-method="gmm"><span class="chk">✓</span><div class="tag">Arellano–Bond GMM</div><h3 data-i18n="m2t"></h3><p data-i18n="m2d"></p></button>
+      <button class="mcard" data-method="unit"><span class="chk">✓</span><div class="tag">Unit Root · Cointegration</div><h3 data-i18n="m3t"></h3><p data-i18n="m3d"></p></button>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step hidden" id="step2">
+    <div class="step-h"><div class="step-n">2</div><h2 data-i18n="s2"></h2></div>
+    <div class="drop" id="drop">
+      <div class="ico">⬆</div>
+      <div data-i18n="upload"></div>
+      <div class="fn" id="fileName"></div>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
+    </div>
+    <div class="row-btns">
+      <button class="btn warm" id="btnSample">▶ <span data-i18n="btnSample"></span></button>
+      <button class="btn" id="btnDlSample">⬇ <span data-i18n="btnDlSample"></span></button>
+    </div>
+    <div class="hint" data-i18n="fmtHint"></div>
+    <div class="hint" id="sampleHint"></div>
+
+    <div id="dataArea" class="hidden">
+      <div class="grid2">
+        <div class="panel-box">
+          <h4 data-i18n="mapping"></h4>
+          <div class="field"><label data-i18n="idcol"></label><select id="selId"></select></div>
+          <div class="field"><label data-i18n="timecol"></label><select id="selTime"></select></div>
+          <div class="field"><label data-i18n="ycol"></label><select id="selY"></select></div>
+          <div class="field"><label data-i18n="xcol"></label><div class="checks" id="chkX"></div></div>
+        </div>
+        <div class="panel-box">
+          <h4 data-i18n="options"></h4>
+          <div id="optArea"></div>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <h4 style="margin:0 0 6px;font-size:15px" data-i18n="preview"></h4>
+        <p class="preview-meta" id="previewMeta"></p>
+        <div class="tbl-wrap" id="previewTbl"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step hidden" id="step3">
+    <div class="step-h"><div class="step-n">3</div><h2 data-i18n="s3"></h2></div>
+    <div class="process-row">
+      <button class="btn primary big" id="btnRun"><span id="runIco">⚙</span> <span data-i18n="process"></span></button>
+      <button class="btn" id="btnResetMid">↺ <span data-i18n="reset"></span></button>
+    </div>
+    <div id="msg"></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="step hidden" id="results">
+    <div class="step-h"><div class="step-n">✓</div><h2 data-i18n="results"></h2></div>
+    <div class="res-bar">
+      <div class="seg">
+        <button id="vTable" class="on">▦ <span data-i18n="viewTable"></span></button>
+        <button id="vChart">◔ <span data-i18n="viewChart"></span></button>
+      </div>
+      <button class="btn primary" id="btnXlsx">⬇ <span data-i18n="dlExcel"></span></button>
+    </div>
+    <div id="summary"></div>
+    <div id="tablesView"></div>
+    <div id="chartsView" class="charts hidden"></div>
+    <div class="row-btns" style="margin-top:24px"><button class="btn" id="btnResetBottom">↺ <span data-i18n="reset"></span></button></div>
+  </section>
+</main>
+
+<footer><div class="wrap" data-i18n="footer"></div></footer>
+
+<!-- ===================== ENGINE (pure computation) ===================== -->
+<script id="engine">
+const Eng = (function(){
+'use strict';
+/* ---------- random numbers ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function makeRandn(seed){const r=mulberry32(seed);let spare=null;return function(){if(spare!==null){const s=spare;spare=null;return s;}let u,v,s;do{u=r()*2-1;v=r()*2-1;s=u*u+v*v;}while(s>=1||s===0);const m=Math.sqrt(-2*Math.log(s)/s);spare=v*m;return u*m;};}
+
+/* ---------- distributions ---------- */
+const LG=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+function lgamma(x){if(x<0.5)return Math.log(Math.PI/Math.abs(Math.sin(Math.PI*x)))-lgamma(1-x);x-=1;let a=LG[0];const t=x+7.5;for(let i=1;i<9;i++)a+=LG[i]/(x+i);return 0.5*Math.log(2*Math.PI)+(x+0.5)*Math.log(t)-t+Math.log(a);}
+function erfc(x){const z=Math.abs(x);const t=1/(1+0.5*z);const r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));return x>=0?r:2-r;}
+function normCdf(x){return 0.5*erfc(-x/Math.SQRT2);}
+function normInv(p){
+  const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+  const b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+  const c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+  const d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+  const pl=0.02425;let q,r;
+  if(p<=0)return -Infinity;if(p>=1)return Infinity;
+  if(p<pl){q=Math.sqrt(-2*Math.log(p));return(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  if(p<=1-pl){q=p-0.5;r=q*q;return(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+  q=Math.sqrt(-2*Math.log(1-p));return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+}
+function betacf(a,b,x){const FP=1e-300;let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<FP)d=FP;d=1/d;let h=d;
+  for(let m=1;m<=500;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-15)break;}
+  return h;}
+function ibeta(a,b,x){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+function pT2(t,df){if(!isFinite(t))return 0;return ibeta(df/2,0.5,df/(df+t*t));}
+function pF(F,d1,d2){if(!(F>0))return 1;return ibeta(d2/2,d1/2,d2/(d2+d1*F));}
+function gammp(a,x){if(x<=0)return 0;const gln=lgamma(a);
+  if(x<a+1){let ap=a,sum=1/a,del=sum;for(let n=0;n<1000;n++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*1e-15)break;}return sum*Math.exp(-x+a*Math.log(x)-gln);}
+  let b=x+1-a,c=1e300,d=1/b,h=d;for(let i=1;i<1000;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<1e-15)break;}
+  return 1-Math.exp(-x+a*Math.log(x)-gln)*h;}
+function pChi2(x,k){if(!(x>0))return 1;return Math.max(0,Math.min(1,1-gammp(k/2,x/2)));}
+function tCrit(df){if(!isFinite(df)||df>1e6)return 1.959964;let lo=0,hi=500;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(pT2(m,df)>0.05)lo=m;else hi=m;}return (lo+hi)/2;}
+
+/* ---------- basic stats ---------- */
+const sum=a=>{let s=0;for(const x of a)s+=x;return s;};
+const mean=a=>sum(a)/a.length;
+const sd=a=>{const m=mean(a);let s=0;for(const x of a)s+=(x-m)*(x-m);return Math.sqrt(s/(a.length-1));};
+const dot=(a,b)=>{let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s;};
+function corr(a,b){const ma=mean(a),mb=mean(b);let sab=0,saa=0,sbb=0;for(let i=0;i<a.length;i++){const x=a[i]-ma,y=b[i]-mb;sab+=x*y;saa+=x*x;sbb+=y*y;}return sab/Math.sqrt(saa*sbb);}
+
+/* ---------- matrices ---------- */
+const zeros=(r,c)=>Array.from({length:r},()=>new Array(c).fill(0));
+function tp(A){const r=A.length,c=A[0].length,B=zeros(c,r);for(let i=0;i<r;i++)for(let j=0;j<c;j++)B[j][i]=A[i][j];return B;}
+function mm(A,B){const r=A.length,n=B.length,c=B[0].length,C=zeros(r,c);for(let i=0;i<r;i++){const Ai=A[i],Ci=C[i];for(let k=0;k<n;k++){const a=Ai[k];if(a===0)continue;const Bk=B[k];for(let j=0;j<c;j++)Ci[j]+=a*Bk[j];}}return C;}
+function mv(A,v){return A.map(r=>dot(r,v));}
+function tmm(A,B){const n=A.length,p=A[0].length,q=B[0].length,C=zeros(p,q);for(let t=0;t<n;t++){const a=A[t],b=B[t];for(let i=0;i<p;i++){const ai=a[i];if(ai===0)continue;const Ci=C[i];for(let j=0;j<q;j++)Ci[j]+=ai*b[j];}}return C;}
+function tmv(A,v){const p=A[0].length,out=new Array(p).fill(0);for(let t=0;t<A.length;t++){const a=A[t],vt=v[t];for(let i=0;i<p;i++)out[i]+=a[i]*vt;}return out;}
+function addM(A,B){for(let i=0;i<A.length;i++)for(let j=0;j<A[0].length;j++)A[i][j]+=B[i][j];return A;}
+function scaleM(A,s){return A.map(r=>r.map(x=>x*s));}
+function outer(a,b){return a.map(x=>b.map(y=>x*y));}
+function symm(A){const n=A.length,B=zeros(n,n);for(let i=0;i<n;i++)for(let j=0;j<n;j++)B[i][j]=(A[i][j]+A[j][i])/2;return B;}
+function inv(A){const n=A.length;let mx=0;for(const r of A)for(const v of r)mx=Math.max(mx,Math.abs(v));
+  const M=A.map((r,i)=>{const e=new Array(n).fill(0);e[i]=1;return r.concat(e);});
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;
+    if(Math.abs(M[p][c])<1e-13*Math.max(mx,1e-300))throw new Error('singular');
+    const tmp=M[c];M[c]=M[p];M[p]=tmp;const pv=M[c][c];for(let j=0;j<2*n;j++)M[c][j]/=pv;
+    for(let r=0;r<n;r++)if(r!==c){const f=M[r][c];if(f!==0){const Mr=M[r],Mc=M[c];for(let j=0;j<2*n;j++)Mr[j]-=f*Mc[j];}}}
+  return M.map(r=>r.slice(n));}
+function eigSym(S){const n=S.length;const A=S.map(r=>r.slice());const V=zeros(n,n);for(let i=0;i<n;i++)V[i][i]=1;
+  let nrm=0;for(let i=0;i<n;i++)for(let j=0;j<n;j++)nrm+=A[i][j]*A[i][j];
+  for(let sweep=0;sweep<100;sweep++){let off=0;for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)off+=A[i][j]*A[i][j];if(off<=1e-24*nrm||off===0)break;
+    for(let p=0;p<n-1;p++)for(let q=p+1;q<n;q++){const apq=A[p][q];if(Math.abs(apq)<1e-300)continue;
+      const th=(A[q][q]-A[p][p])/(2*apq);const t=(th>=0?1:-1)/(Math.abs(th)+Math.sqrt(th*th+1));const c=1/Math.sqrt(t*t+1),s=t*c;
+      for(let k=0;k<n;k++){const akp=A[k][p],akq=A[k][q];A[k][p]=c*akp-s*akq;A[k][q]=s*akp+c*akq;}
+      for(let k=0;k<n;k++){const apk=A[p][k],aqk=A[q][k];A[p][k]=c*apk-s*aqk;A[q][k]=s*apk+c*aqk;}
+      for(let k=0;k<n;k++){const vkp=V[k][p],vkq=V[k][q];V[k][p]=c*vkp-s*vkq;V[k][q]=s*vkp+c*vkq;}}}
+  return {vals:A.map((r,i)=>r[i]),vecs:V};}
+function pinvSym(S){const {vals,vecs}=eigSym(symm(S));const n=vals.length;const mx=Math.max(...vals.map(Math.abs));const tol=mx*n*1e-12;
+  const B=zeros(n,n);for(let k=0;k<n;k++){if(Math.abs(vals[k])<=tol)continue;const il=1/vals[k];for(let i=0;i<n;i++){const vik=vecs[i][k]*il;if(vik===0)continue;for(let j=0;j<n;j++)B[i][j]+=vik*vecs[j][k];}}
+  return B;}
+function invSafe(A){try{return inv(A);}catch(e){return pinvSym(A);}}
+function olsFit(y,X){const XtX=tmm(X,X);const XtXi=invSafe(XtX);const b=mv(XtXi,tmv(X,y));const fit=X.map(r=>dot(r,b));const e=y.map((v,i)=>v-fit[i]);let ssr=0;for(const v of e)ssr+=v*v;return {b,XtXi,fit,e,ssr};}
+function split(arr,Ti){const out=[];let o=0;for(const t of Ti){out.push(arr.slice(o,o+t));o+=t;}return out;}
+function clusterV(Xg,eg,XtXi,n,p){const G=Xg.length,kk=XtXi.length;const meat=zeros(kk,kk);
+  for(let g=0;g<G;g++){const s=new Array(kk).fill(0);Xg[g].forEach((x,t)=>{for(let j=0;j<kk;j++)s[j]+=x[j]*eg[g][t];});for(let a=0;a<kk;a++)for(let b=0;b<kk;b++)meat[a][b]+=s[a]*s[b];}
+  const c=(G/(G-1))*((n-1)/(n-p));return scaleM(mm(mm(XtXi,meat),XtXi),c);}
+const diagSqrt=V=>V.map((r,i)=>r[i]>0?Math.sqrt(r[i]):NaN);
+
+/* ---------- panel construction ---------- */
+function toNum(x){if(typeof x==='number')return x;if(x===null||x===undefined)return NaN;const s=String(x).replace(/,/g,'').trim();if(s==='')return NaN;return Number(s);}
+function buildPanel(rows,idCol,timeCol,vars){
+  const rawT=rows.map(r=>r[timeCol]);const numericT=rawT.every(v=>v===null||v===undefined||v===''||isFinite(toNum(v)));
+  let tmap=null;if(!numericT){const u=[...new Set(rawT.filter(v=>v!==null&&v!==undefined&&v!=='').map(String))].sort();tmap=new Map(u.map((v,i)=>[v,i]));}
+  const map=new Map();let dropped=0;
+  for(const r of rows){const id=r[idCol];const traw=r[timeCol];const tm=numericT?toNum(traw):(tmap.has(String(traw))?tmap.get(String(traw)):NaN);
+    if(id===undefined||id===null||id===''||!isFinite(tm)){dropped++;continue;}
+    const vals=vars.map(v=>toNum(r[v]));if(vals.some(x=>!isFinite(x))){dropped++;continue;}
+    const key=String(id);if(!map.has(key))map.set(key,new Map());const g=map.get(key);if(g.has(tm)){dropped++;continue;}g.set(tm,vals);}
+  const groups=[];const tset=new Set();
+  for(const [id,m] of map){const ts=[...m.keys()].sort((a,b)=>a-b);const g={id,t:ts,v:{}};vars.forEach((v,j)=>g.v[v]=ts.map(t=>m.get(t)[j]));ts.forEach(t=>tset.add(t));groups.push(g);}
+  const times=[...tset].sort((a,b)=>a-b);
+  const tlabels=numericT?times.map(String):times.map(i=>[...tmap.keys()][i]);
+  return {groups,times,tlabels,vars,dropped,nRows:rows.length};
+}
+function balance(P){const T=P.times.length;const groups=P.groups.filter(g=>g.t.length===T);return {groups,times:P.times,tlabels:P.tlabels,removed:P.groups.length-groups.length};}
+
+/* ---------- descriptive ---------- */
+function describe(P,vars){return vars.map(v=>{const all=P.groups.flatMap(g=>g.v[v]);const gm=P.groups.map(g=>mean(g.v[v]));const om=mean(all);
+  const within=P.groups.flatMap((g,i)=>g.v[v].map(x=>x-gm[i]+om));
+  return {v,n:all.length,mean:om,sd:sd(all),between:gm.length>1?sd(gm):NaN,within:sd(within),min:Math.min(...all),max:Math.max(...all)};});}
+
+/* ---------- FEM / REM ---------- */
+function runFERE(P,yv,xv,robust){
+  const k=xv.length,G=P.groups,N=G.length;
+  if(N<3)throw new Error('ERR_FEW_GROUPS');
+  const Yg=G.map(g=>g.v[yv]);const Xg=G.map(g=>g.v[yv].map((_,t)=>xv.map(x=>g.v[x][t])));
+  const Ti=Yg.map(y=>y.length);const n=sum(Ti);
+  if(n-N-k<1)throw new Error('ERR_DF');
+  const Y=Yg.flat(),X=Xg.flat();
+  const ybarAll=mean(Y),xbarAll=xv.map((_,j)=>mean(X.map(r=>r[j])));
+  let sst=0;for(const y of Y)sst+=(y-ybarAll)**2;
+  // Pooled OLS
+  const Xc=X.map(r=>[1,...r]);const po=olsFit(Y,Xc);const dfP=n-k-1;const s2p=po.ssr/dfP;
+  let Vp=scaleM(po.XtXi,s2p);if(robust)Vp=clusterV(split(Xc,Ti),split(po.e,Ti),po.XtXi,n,k+1);
+  const R2p=1-po.ssr/sst;
+  const pooled={names:['_cons',...xv],b:po.b,se:diagSqrt(Vp),dist:'t',df:dfP,R2:R2p,adjR2:1-(1-R2p)*(n-1)/dfP,F:(R2p/k)/((1-R2p)/dfP),Fdf:[k,dfP],ssr:po.ssr,sigma:Math.sqrt(s2p),fit:po.fit,e:po.e};
+  pooled.Fp=pF(pooled.F,k,dfP);
+  // Within (FE)
+  const ybar=Yg.map(mean),xbar=Xg.map(xs=>xv.map((_,j)=>mean(xs.map(r=>r[j]))));
+  const Yd=[],Xd=[];G.forEach((g,i)=>{Yg[i].forEach((y,t)=>{Yd.push(y-ybar[i]);Xd.push(Xg[i][t].map((x,j)=>x-xbar[i][j]));});});
+  const fe=olsFit(Yd,Xd);const dfF=n-N-k;const s2e=fe.ssr/dfF;
+  const VfeC=scaleM(fe.XtXi,s2e);const Vfe=robust?clusterV(split(Xd,Ti),split(fe.e,Ti),fe.XtXi,n,k+1):VfeC;
+  const alpha=ybar.map((yb,i)=>yb-dot(xbar[i],fe.b));const consFE=ybarAll-dot(xbarAll,fe.b);const u=alpha.map(a=>a-consFE);
+  const sigU=sd(u),sigE=Math.sqrt(s2e);let sYd=0;for(const v of Yd)sYd+=v*v;
+  const R2w=1-fe.ssr/sYd;const R2b=corr(ybar,xbar.map(x=>dot(x,fe.b)))**2;const R2o=corr(Y,X.map(x=>dot(x,fe.b)))**2;
+  const Ffe=(R2w/k)/((1-R2w)/dfF);const Fu=((po.ssr-fe.ssr)/(N-1))/(fe.ssr/dfF);
+  const feFit=[];const feRes=fe.e.slice();G.forEach((g,i)=>Xg[i].forEach(x=>feFit.push(alpha[i]+dot(x,fe.b))));
+  const FE={names:['_cons',...xv],b:[consFE,...fe.b],se:[NaN,...diagSqrt(Vfe)],dist:'t',df:dfF,R2w,R2b,R2o,F:Ffe,Fdf:[k,dfF],Fp:pF(Ffe,k,dfF),
+    sigU,sigE,rho:sigU*sigU/(sigU*sigU+sigE*sigE),Fu,FuDf:[N-1,dfF],Fup:pF(Fu,N-1,dfF),alpha,u,fit:feFit,e:feRes,ssr:fe.ssr,corr_u_xb:corr(u,xbar.map(x=>dot(x,fe.b)))};
+  // RE (Swamy–Arora)
+  let RE=null,haus=null;
+  if(N-k-1>=1){
+    const XB=xbar.map(x=>[1,...x]);const be=olsFit(ybar,XB);const s2b=be.ssr/(N-k-1);
+    const Tbar=N/sum(Ti.map(t=>1/t));let s2u=s2b-s2e/Tbar;if(s2u<0)s2u=0;
+    const theta=Ti.map(t=>1-Math.sqrt(s2e/(t*s2u+s2e)));
+    const Ys=[],Xs=[];G.forEach((g,i)=>{Yg[i].forEach((y,t)=>{Ys.push(y-theta[i]*ybar[i]);Xs.push([1-theta[i],...Xg[i][t].map((x,j)=>x-theta[i]*xbar[i][j])]);});});
+    const re=olsFit(Ys,Xs);const VreC=scaleM(re.XtXi,s2e);
+    const Vre=robust?clusterV(split(Xs,Ti),split(re.e,Ti),re.XtXi,n,k+1):VreC;
+    const bs=re.b.slice(1);const Vs=Vre.slice(1).map(r=>r.slice(1));const wald=dot(bs,mv(invSafe(Vs),bs));
+    const reLevelRes=Y.map((y,i)=>y-dot(Xc[i],re.b));
+    RE={names:['_cons',...xv],b:re.b,se:diagSqrt(Vre),dist:'z',df:Infinity,R2w:corr(Yd,Xd.map(x=>dot(x,bs)))**2,R2b:corr(ybar,xbar.map(x=>dot(x,bs)))**2,R2o:corr(Y,X.map(x=>dot(x,bs)))**2,
+      wald,waldDf:k,waldP:pChi2(wald,k),sigU:Math.sqrt(s2u),sigE,rho:s2u/(s2u+s2e),theta,thetaMin:Math.min(...theta),thetaMax:Math.max(...theta),thetaMean:mean(theta),e:reLevelRes,fit:Y.map((y,i)=>y-reLevelRes[i])};
+    // Hausman
+    const d=fe.b.map((b,j)=>b-re.b[j+1]);const VreCs=VreC.slice(1).map(r=>r.slice(1));const Vd=VfeC.map((r,i)=>r.map((v,j)=>v-VreCs[i][j]));
+    const H=dot(d,mv(pinvSym(Vd),d));haus={stat:H,df:k,p:H>0?pChi2(H,k):NaN,neg:H<0,d,sdDiff:Vd.map((r,i)=>r[i]>0?Math.sqrt(r[i]):NaN)};
+  }
+  // Breusch–Pagan LM
+  const eg=split(po.e,Ti);let sE2=0;for(const v of po.e)sE2+=v*v;let sG=0;for(const e of eg){const s=sum(e);sG+=s*s;}
+  const sT2=sum(Ti.map(t=>t*t));const LM=(n*n/(2*(sT2-n)))*Math.pow(sG/sE2-1,2);
+  const bp={stat:LM,df:1,p:pChi2(LM,1)};
+  return {method:'fere',yv,xv,robust,n,N,Tmin:Math.min(...Ti),Tmax:Math.max(...Ti),Tavg:n/N,balanced:Math.min(...Ti)===Math.max(...Ti),
+    ids:G.map(g=>g.id),Ti,ybar,pooled,FE,RE,haus,bp,desc:describe(P,[yv,...xv]),Y,P};
+}
+
+/* ---------- Dynamic panel: Arellano–Bond difference GMM ---------- */
+function runGMM(P0,yv,xv,opt){
+  const B=balance(P0);const G=B.groups,N=G.length,T=B.times.length,k=xv.length,p=1+k;
+  if(N<5)throw new Error('ERR_FEW_GROUPS');if(T<4)throw new Error('ERR_T4');
+  const maxLag=opt.maxLag>0?opt.maxLag:Infinity,collapse=!!opt.collapse;
+  const keyIdx=new Map();
+  for(let t=2;t<T;t++)for(let l=2;l<=t;l++){if(l>maxLag)continue;const key=collapse?('L'+l):(t+'_'+l);if(!keyIdx.has(key))keyIdx.set(key,keyIdx.size);}
+  const q=keyIdx.size,L=q+k,m=T-2;
+  if(L<=p)throw new Error('ERR_INSTR');
+  const Zs=[],Xs=[],Ys=[];
+  for(const g of G){const y=g.v[yv];const xs=xv.map(x=>g.v[x]);const Z=zeros(m,L),X=zeros(m,p),Yv=new Array(m);
+    for(let r=0;r<m;r++){const t=r+2;Yv[r]=y[t]-y[t-1];X[r][0]=y[t-1]-y[t-2];
+      for(let j=0;j<k;j++){const dx=xs[j][t]-xs[j][t-1];X[r][1+j]=dx;Z[r][q+j]=dx;}
+      for(let l=2;l<=t;l++){if(l>maxLag)continue;Z[r][keyIdx.get(collapse?('L'+l):(t+'_'+l))]=y[t-l];}}
+    Zs.push(Z);Xs.push(X);Ys.push(Yv);}
+  let ZX=zeros(L,p),Zy=new Array(L).fill(0),ZHZ=zeros(L,L);
+  for(let i=0;i<N;i++){const Z=Zs[i];addM(ZX,tmm(Z,Xs[i]));const zy=tmv(Z,Ys[i]);for(let a=0;a<L;a++)Zy[a]+=zy[a];
+    const HZ=Z.map((row,r)=>row.map((v,c)=>2*v-(r>0?Z[r-1][c]:0)-(r<m-1?Z[r+1][c]:0)));addM(ZHZ,tmm(Z,HZ));}
+  const XZ=tp(ZX);
+  // one-step
+  const W1=pinvSym(ZHZ);const XZW1=mm(XZ,W1);const A1=mm(XZW1,ZX);const A1i=invSafe(A1);const b1=mv(A1i,mv(XZW1,Zy));
+  const e1=Ys.map((y,i)=>y.map((v,r)=>v-dot(Xs[i][r],b1)));
+  let S=zeros(L,L);const Ze1=new Array(L).fill(0);const Zei1=[];
+  for(let i=0;i<N;i++){const ze=tmv(Zs[i],e1[i]);Zei1.push(ze);addM(S,outer(ze,ze));for(let a=0;a<L;a++)Ze1[a]+=ze[a];}
+  const V1=mm(mm(A1i,mm(mm(XZW1,S),tp(XZW1))),A1i);
+  // two-step
+  const W2=pinvSym(S);const XZW2=mm(XZ,W2);const A2=mm(XZW2,ZX);const A2i=invSafe(A2);const b2=mv(A2i,mv(XZW2,Zy));
+  const e2=Ys.map((y,i)=>y.map((v,r)=>v-dot(Xs[i][r],b2)));
+  const Ze2=new Array(L).fill(0);for(let i=0;i<N;i++){const ze=tmv(Zs[i],e2[i]);for(let a=0;a<L;a++)Ze2[a]+=ze[a];}
+  const V2=A2i;
+  // Windmeijer (2005) finite-sample correction
+  const W2Ze2=mv(W2,Ze2);const D=zeros(p,p);
+  for(let j=0;j<p;j++){const dS=zeros(L,L);
+    for(let i=0;i<N;i++){const xj=Xs[i].map(r=>r[j]);const zx=tmv(Zs[i],xj);const ze=Zei1[i];for(let a=0;a<L;a++){const za=zx[a],ea=ze[a];const row=dS[a];for(let b=0;b<L;b++)row[b]+=za*ze[b]+ea*zx[b];}}
+    const col=mv(A2i,mv(XZW2,mv(dS,W2Ze2)));for(let a=0;a<p;a++)D[a][j]=col[a];}
+  const VW=addM(addM(addM(V2.map(r=>r.slice()),mm(D,V2)),mm(V2,tp(D))),mm(mm(D,V1),tp(D)));
+  // AR tests
+  const arTest=(es,j)=>{let sw=0,sw2=0;for(const e of es){let w=0;for(let r=j;r<e.length;r++)w+=e[r]*e[r-j];sw+=w;sw2+=w*w;}const z=sw/Math.sqrt(sw2);return {stat:z,p:2*(1-normCdf(Math.abs(z)))};};
+  let ee1=0;for(const e of e1)for(const v of e)ee1+=v*v;const sig2=ee1/(2*N*m);
+  const sargan=dot(Ze1,mv(W1,Ze1))/sig2;const hansen=dot(Ze2,mv(W2,Ze2));const odf=L-p;
+  const wald1=dot(b1,mv(invSafe(V1),b1)),wald2=dot(b2,mv(invSafe(VW),b2));
+  // Long-run effects (two-step, Windmeijer)
+  const a=b2[0];const lr=xv.map((x,j)=>{const bj=b2[1+j];const val=bj/(1-a);const g0=bj/((1-a)*(1-a)),gj=1/(1-a);
+    const v=g0*g0*VW[0][0]+gj*gj*VW[1+j][1+j]+2*g0*gj*VW[0][1+j];return {x,val,se:Math.sqrt(Math.max(v,0))};});
+  // Benchmarks: OLS levels & FE on the same lag structure
+  const Yb=[],Xb=[],gi=[];G.forEach((g,i)=>{for(let t=1;t<T;t++){Yb.push(g.v[yv][t]);Xb.push([g.v[yv][t-1],...xv.map(x=>g.v[x][t])]);gi.push(i);}});
+  const olsB=olsFit(Yb,Xb.map(r=>[1,...r]));
+  const Ti=G.map(()=>T-1);const ygm=split(Yb,Ti).map(mean);const xgm=split(Xb,Ti).map(xs=>xs[0].map((_,j)=>mean(xs.map(r=>r[j]))));
+  const feB=olsFit(Yb.map((y,i)=>y-ygm[gi[i]]),Xb.map((r,i)=>r.map((v,j)=>v-xgm[gi[i]][j])));
+  // residual autocorrelation (two-step, differenced)
+  const acf=[1,2,3].map(j=>{const A=[],Bv=[];for(const e of e2)for(let r=j;r<e.length;r++){A.push(e[r]);Bv.push(e[r-j]);}return A.length>2?corr(A,Bv):NaN;});
+  const dyAct=Ys.flat(),dyFit=Ys.flatMap((y,i)=>y.map((v,r)=>v-e2[i][r]));
+  return {method:'gmm',yv,xv,N,T,removed:B.removed,nobs:N*m,L,q,collapse,maxLag:opt.maxLag||0,names:['L1.'+yv,...xv.map(x=>'D.'+x)],cleanNames:['L.'+yv,...xv],
+    one:{b:b1,se:diagSqrt(V1),wald:wald1,waldP:pChi2(wald1,p)},two:{b:b2,se:diagSqrt(VW),seUncorr:diagSqrt(V2),wald:wald2,waldP:pChi2(wald2,p)},
+    ar1:arTest(e2,1),ar2:arTest(e2,2),ar1o:arTest(e1,1),ar2o:arTest(e1,2),sargan:{stat:sargan,df:odf,p:pChi2(sargan,odf)},hansen:{stat:hansen,df:odf,p:pChi2(hansen,odf)},
+    ols:{b:olsB.b.slice(1)},fe:{b:feB.b},lr,acf,dyAct,dyFit,res:e2.flat(),B};
+}
+
+/* ---------- Panel unit root ---------- */
+function adfT(y,p){const n=y.length;const dy=[];for(let t=1;t<n;t++)dy.push(y[t]-y[t-1]);
+  const Y=[],X=[];for(let t=p+1;t<n;t++){Y.push(dy[t-1]);const r=[1,y[t-1]];for(let j=1;j<=p;j++)r.push(dy[t-1-j]);X.push(r);}
+  const nc=2+p;if(Y.length-nc<2)return {t:NaN};const f=olsFit(Y,X);const s2=f.ssr/(Y.length-nc);const se=Math.sqrt(s2*f.XtXi[1][1]);return {t:f.b[1]/se,rho:f.b[1]};}
+function mackinnonP(t){if(!isFinite(t))return NaN;if(t>2.74)return 1;if(t<-18.83)return 0;
+  const c=t<=-1.61?[2.1659,1.4412,0.038269]:[1.7339,0.93202,-0.12745,-0.010368];let v=0;for(let i=c.length-1;i>=0;i--)v=v*t+c[i];return normCdf(v);}
+const IPS_T=[6,7,8,9,10,15,20,25,30,40,50,60,70,100],IPS_E=[-1.520,-1.514,-1.501,-1.501,-1.504,-1.514,-1.522,-1.520,-1.526,-1.523,-1.527,-1.519,-1.524,-1.532],IPS_V=[1.745,1.414,1.228,1.132,1.069,0.923,0.851,0.809,0.789,0.770,0.760,0.749,0.736,0.735];
+function ipsMoments(T){if(T<=IPS_T[0])return [IPS_E[0],IPS_V[0]];if(T>=100)return [IPS_E[13],IPS_V[13]];
+  for(let i=0;i<IPS_T.length-1;i++)if(T>=IPS_T[i]&&T<=IPS_T[i+1]){const w=(T-IPS_T[i])/(IPS_T[i+1]-IPS_T[i]);return [IPS_E[i]+w*(IPS_E[i+1]-IPS_E[i]),IPS_V[i]+w*(IPS_V[i+1]-IPS_V[i])];}}
+function unitTests(list,lags){const N=list.length,T=list[0].length;
+  // Harris–Tzavalis (fixed effects, no trend)
+  let sxy=0,sxx=0;for(const s of list){const xs=s.slice(0,-1),ys=s.slice(1);const xm=mean(xs),ym=mean(ys);for(let t=0;t<xs.length;t++){sxy+=(xs[t]-xm)*(ys[t]-ym);sxx+=(xs[t]-xm)**2;}}
+  const phi=sxy/sxx,Te=T-1,Bm=-3/(Te+1),C=3*(17*Te*Te-20*Te+17)/(5*(Te-1)*Math.pow(Te+1,3));const zHT=Math.sqrt(N)*(phi-1-Bm)/Math.sqrt(C);
+  // IPS
+  const ti=list.map(s=>adfT(s,0).t);const okT=ti.filter(isFinite);const tbar=mean(okT);const [E,V]=ipsMoments(T);const W=Math.sqrt(okT.length)*(tbar-E)/Math.sqrt(V);
+  // Fisher-ADF / Choi
+  const ta=list.map(s=>adfT(s,lags).t);const pi=ta.map(mackinnonP);const okp=pi.filter(isFinite).map(v=>Math.min(Math.max(v,1e-10),1-1e-10));
+  const Pst=-2*sum(okp.map(Math.log));const Zst=sum(okp.map(normInv))/Math.sqrt(okp.length);
+  return {N,T,HT:{stat:zHT,p:normCdf(zHT),phi},IPS:{stat:W,p:normCdf(W),tbar,E,V},FADF:{stat:Pst,df:2*okp.length,p:pChi2(Pst,2*okp.length)},CHOI:{stat:Zst,p:normCdf(Zst)},indiv:{tDF:ti,tADF:ta,p:pi}};}
+function autocov(w,j){const n=w.length,d=w[0].length,C=zeros(d,d);for(let t=j;t<n;t++)for(let a=0;a<d;a++)for(let b=0;b<d;b++)C[a][b]+=w[t][a]*w[t-j][b];return scaleM(C,1/n);}
+function lrvar(series,bw){const n=series.length;const m=mean(series);const s=series.map(v=>v-m);let g0=0;for(const v of s)g0+=v*v;g0/=n;let o=g0;for(let j=1;j<=bw;j++){let g=0;for(let t=j;t<n;t++)g+=s[t]*s[t-j];g/=n;o+=2*(1-j/(bw+1))*g;}return o;}
+function runKao(B,yv,xv,lags){const G=B.groups,N=G.length,T=B.times.length,k=xv.length;
+  const Yd=[],Xd=[];G.forEach(g=>{const y=g.v[yv];const ym=mean(y);const xm=xv.map(x=>mean(g.v[x]));for(let t=0;t<T;t++){Yd.push(y[t]-ym);Xd.push(xv.map((x,j)=>g.v[x][t]-xm[j]));}});
+  const fe=olsFit(Yd,Xd);const E=split(fe.e,G.map(()=>T));
+  let sxy=0,sxx=0;E.forEach(e=>{for(let t=1;t<T;t++){sxy+=e[t]*e[t-1];sxx+=e[t-1]*e[t-1];}});
+  const rho=sxy/sxx;let ssr=0,cnt=0;E.forEach(e=>{for(let t=1;t<T;t++){ssr+=(e[t]-rho*e[t-1])**2;cnt++;}});
+  const tr=(rho-1)/Math.sqrt((ssr/(cnt-1))/sxx);
+  const bw=Math.max(1,Math.floor(4*Math.pow(T/100,2/9)));const dim=1+k;const Sig=zeros(dim,dim),Om=zeros(dim,dim);
+  G.forEach((g,i)=>{let w=[];for(let t=1;t<T;t++)w.push([E[i][t],...xv.map(x=>g.v[x][t]-g.v[x][t-1])]);
+    const wm=w[0].map((_,j)=>mean(w.map(r=>r[j])));w=w.map(r=>r.map((v,j)=>v-wm[j]));
+    const G0=autocov(w,0);addM(Sig,G0);const O=G0.map(r=>r.slice());for(let j=1;j<=bw;j++){const Gj=autocov(w,j);const wt=1-j/(bw+1);for(let a=0;a<dim;a++)for(let b=0;b<dim;b++)O[a][b]+=wt*(Gj[a][b]+Gj[b][a]);}addM(Om,O);});
+  const cond=M0=>{const M=scaleM(M0,1/N);const suu=M[0][0];const sue=M[0].slice(1);const See=M.slice(1).map(r=>r.slice(1));return suu-dot(sue,mv(invSafe(See),sue));};
+  const sv2=Math.max(cond(Sig),1e-12),s0v2=Math.max(cond(Om),1e-12),sv=Math.sqrt(sv2),s0v=Math.sqrt(s0v2);const rN=Math.sqrt(N);
+  const DFr=(rN*T*(rho-1)+3*rN)/Math.sqrt(10.2);const DFt=Math.sqrt(1.25)*tr+Math.sqrt(1.875*N);
+  const DFrS=(rN*T*(rho-1)+3*rN*sv2/s0v2)/Math.sqrt(3+36*sv2*sv2/(5*s0v2*s0v2));
+  const den=Math.sqrt(s0v2/(2*sv2)+3*sv2/(10*s0v2));const DFtS=(tr+Math.sqrt(6*N)*sv/(2*s0v))/den;
+  const pl=Math.max(lags,1);const Ya=[],Xa=[];E.forEach(e=>{for(let t=pl+1;t<T;t++){Ya.push(e[t]);const r=[e[t-1]];for(let j=1;j<=pl;j++)r.push(e[t-j]-e[t-j-1]);Xa.push(r);}});
+  const fa=olsFit(Ya,Xa);const s2a=fa.ssr/(Ya.length-Xa[0].length);const tADF=(fa.b[0]-1)/Math.sqrt(s2a*fa.XtXi[0][0]);
+  const ADF=(tADF+Math.sqrt(6*N)*sv/(2*s0v))/den;
+  const mk=(name,stat)=>({name,stat,p:normCdf(stat)});
+  return {rho,stats:[mk('DF_rho',DFr),mk('DF_t',DFt),mk('DF*_rho',DFrS),mk('DF*_t',DFtS),mk('ADF',ADF)],sv2,s0v2,bw,adfLags:pl,feB:fe.b,resid:E};}
+function runDOLS(B,yv,xv){const G=B.groups,T=B.times.length,k=xv.length;if(T<6)return null;
+  const Yd=[],Xd=[],Ti=[];
+  G.forEach(g=>{const ys=[],xs=[];for(let t=2;t<=T-2;t++){ys.push(g.v[yv][t]);const r=xv.map(x=>g.v[x][t]);for(const lag of [1,0,-1])for(const x of xv)r.push(g.v[x][t+lag]-g.v[x][t+lag-1]);xs.push(r);}
+    const ym=mean(ys);const xm=xs[0].map((_,j)=>mean(xs.map(r=>r[j])));ys.forEach((y,i)=>{Yd.push(y-ym);Xd.push(xs[i].map((v,j)=>v-xm[j]));});Ti.push(ys.length);});
+  const f=olsFit(Yd,Xd);const bw=Math.max(1,Math.floor(4*Math.pow(T/100,2/9)));const om=mean(split(f.e,Ti).map(e=>lrvar(e,bw)));
+  const n=Yd.length,dfc=n-G.length-Xd[0].length;const omAdj=om*n/Math.max(dfc,1);
+  return {b:f.b.slice(0,k),se:f.XtXi.slice(0,k).map((r,i)=>Math.sqrt(omAdj*r[i])),n,leads:1,lags:1};}
+function runUnit(P0,vars,lags,coint,yv,xv){const B=balance(P0);const N=B.groups.length,T=B.times.length;
+  if(N<3)throw new Error('ERR_FEW_GROUPS');if(T<8)throw new Error('ERR_T8');
+  const level={},diff={},order={};
+  for(const v of vars){const L=B.groups.map(g=>g.v[v]);const D=L.map(s=>s.slice(1).map((x,i)=>x-s[i]));level[v]=unitTests(L,lags);diff[v]=unitTests(D,lags);
+    const rej=r=>['HT','IPS','FADF','CHOI'].filter(t=>r[t].p<0.05).length;
+    const rl=rej(level[v]),rd=rej(diff[v]);order[v]={rl,rd,ord:rl>=3?'I(0)':(rd>=3?'I(1)':(rl===2?'mixed0':(rd===2?'mixed1':'I(2)')))};}
+  let kao=null,dols=null;if(coint&&xv.length>0){kao=runKao(B,yv,xv,lags);dols=runDOLS(B,yv,xv);}
+  return {method:'unit',vars,yv,xv,lags,N,T,removed:B.removed,level,diff,order,kao,dols,B};}
+
+/* ---------- sample data ---------- */
+function sample(method){const r3=v=>Math.round(v*1000)/1000;const rows=[];
+  if(method==='fere'){const rn=makeRandn(42);
+    for(let i=1;i<=30;i++){const a=rn()*2;const id='F'+String(i).padStart(2,'0');
+      for(let t=0;t<10;t++){const x1=5+0.8*a+rn(),x2=3+1.5*rn(),x3=10+2*rn();const y=1.5+0.8*x1-0.5*x2+0.2*x3+a+0.8*rn();rows.push({id,year:2014+t,y:r3(y),x1:r3(x1),x2:r3(x2),x3:r3(x3)});}}
+  }else if(method==='gmm'){const rn=makeRandn(7);
+    for(let i=1;i<=60;i++){const eta=rn();const id='P'+String(i).padStart(2,'0');let y=eta/0.5,x1=0;
+      for(let t=-30;t<10;t++){x1=0.5*x1+rn();const x2=2+rn();y=0.5*y+0.4*x1-0.3*x2+eta+0.7*rn();if(t>=0)rows.push({id,year:2015+t,y:r3(y),x1:r3(x1),x2:r3(x2)});}}
+  }else{const rn=makeRandn(2024);
+    for(let i=1;i<=20;i++){const a=2*rn();const id='C'+String(i).padStart(2,'0');let x1=10+2*rn(),x2=5+rn(),u=0;
+      for(let t=0;t<40;t++){x1+=0.8*rn();x2+=0.6*rn();u=0.4*u+0.5*rn();const y=a+1.0*x1+0.5*x2+u;rows.push({id,year:1985+t,y:r3(y),x1:r3(x1),x2:r3(x2)});}}}
+  return rows;}
+
+return {buildPanel,runFERE,runGMM,runUnit,sample,normCdf,normInv,tCrit,pT2,pChi2,pF,mean,sd,corr,mackinnonP};
+})();
+if(typeof module!=='undefined')module.exports=Eng;
+</script>
+
+<!-- ===================== USER INTERFACE ===================== -->
+<script>
+const S={lang:'th',method:null,rows:null,cols:[],src:'',map:{id:'',time:'',y:'',x:[]},
+  opt:{robust:false,maxLag:0,collapse:false,lags:1,coint:true},res:null,view:'table',charts:[]};
+const $=s=>document.querySelector(s);
+const tr=(th,en)=>S.lang==='th'?th:en;
+
+const I18N={
+th:{title:'การวิเคราะห์ข้อมูลพาเนลขั้นสูง',subtitle:'Fixed / Random Effects · Dynamic Panel GMM · Panel Unit Root & Cointegration — ประมวลผลทั้งหมดในเบราว์เซอร์',
+  s1:'เลือกวิธีการวิเคราะห์',s2:'นำเข้าข้อมูล',s3:'ประมวลผล',
+  m1t:'Fixed Effects (FEM) และ Random Effects (REM)',m1d:'ควบคุมผลกระทบเฉพาะตัวที่สังเกตไม่ได้ (Unobserved individual heterogeneity) เปรียบเทียบ Pooled OLS, FEM, REM พร้อม F-test, Breusch–Pagan LM และ Hausman test',
+  m2t:'Dynamic Panel Data (Arellano–Bond GMM)',m2d:'ใช้ตัวแปรตามในอดีต (Lagged dependent variable) เป็นตัวแปรอิสระ ประมาณค่าด้วย Difference GMM แบบ one-step และ two-step พร้อมการทดสอบ AR(1), AR(2), Sargan และ Hansen',
+  m3t:'Panel Unit Root & Panel Cointegration',m3d:'ทดสอบความนิ่งของข้อมูลพาเนล (Harris–Tzavalis, IPS, Fisher-ADF, Choi) และความสัมพันธ์ระยะยาว (Kao test, Panel DOLS)',
+  upload:'ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์ Excel (.xlsx, .xls, .csv)',
+  fmtHint:'รูปแบบข้อมูลแบบ long: 1 แถว = 1 หน่วย × 1 ช่วงเวลา ต้องมีคอลัมน์รหัสหน่วย (เช่น id), ช่วงเวลา (เช่น year) และตัวแปรเชิงตัวเลข',
+  btnSample:'ทดลองข้อมูลตัวอย่าง',btnDlSample:'ดาวน์โหลดไฟล์ตัวอย่าง (.xlsx)',preview:'ตัวอย่างข้อมูล',mapping:'กำหนดตัวแปร',
+  idcol:'รหัสหน่วย (Cross-section ID)',timecol:'ช่วงเวลา (Time)',ycol:'ตัวแปรตาม (Y)',xcol:'ตัวแปรอิสระ (X)',options:'ตัวเลือกการวิเคราะห์',
+  process:'ประมวลผล',results:'ผลการวิเคราะห์',viewTable:'แสดงผลแบบตาราง',viewChart:'แสดงผลแบบกราฟ',dlExcel:'ดาวน์โหลดตาราง (.xlsx)',reset:'รีเซ็ต',
+  footer:'หมายเหตุ: เครื่องมือนี้คำนวณด้วย JavaScript ในเบราว์เซอร์ ข้อมูลไม่ถูกส่งออกไปภายนอก ผลลัพธ์เหมาะสำหรับการศึกษาและการวิเคราะห์เบื้องต้น ควรตรวจสอบกับซอฟต์แวร์มาตรฐาน (Stata, R plm, EViews) ก่อนใช้ในงานวิจัยตีพิมพ์'},
+en:{title:'Advanced Panel Data Analysis',subtitle:'Fixed / Random Effects · Dynamic Panel GMM · Panel Unit Root & Cointegration — computed entirely in your browser',
+  s1:'Choose an analysis method',s2:'Load data',s3:'Run the analysis',
+  m1t:'Fixed Effects (FEM) & Random Effects (REM)',m1d:'Control for unobserved individual heterogeneity. Compares Pooled OLS, FEM and REM with the F-test, Breusch–Pagan LM and Hausman test.',
+  m2t:'Dynamic Panel Data (Arellano–Bond GMM)',m2d:'Uses the lagged dependent variable as a regressor. Difference GMM, one-step and two-step, with AR(1), AR(2), Sargan and Hansen tests.',
+  m3t:'Panel Unit Root & Panel Cointegration',m3d:'Stationarity tests for panels (Harris–Tzavalis, IPS, Fisher-ADF, Choi) and long-run relationships (Kao test, Panel DOLS).',
+  upload:'Drop a file here, or click to choose an Excel file (.xlsx, .xls, .csv)',
+  fmtHint:'Long format: one row = one unit × one period, with a unit ID column (e.g. id), a time column (e.g. year) and numeric variables.',
+  btnSample:'Try sample data',btnDlSample:'Download sample file (.xlsx)',preview:'Data preview',mapping:'Variable mapping',
+  idcol:'Cross-section ID',timecol:'Time period',ycol:'Dependent variable (Y)',xcol:'Independent variables (X)',options:'Analysis options',
+  process:'Run',results:'Results',viewTable:'Show tables',viewChart:'Show charts',dlExcel:'Download tables (.xlsx)',reset:'Reset',
+  footer:'Note: all calculations run in JavaScript inside your browser; no data leaves your computer. Results are intended for teaching and exploratory work — cross-check with standard software (Stata, R plm, EViews) before publication.'}};
+
+const METHOD_NAME={fere:['FEM / REM','FEM / REM'],gmm:['Dynamic Panel GMM','Dynamic Panel GMM'],unit:['Panel Unit Root & Cointegration','Panel Unit Root & Cointegration']};
+const SAMPLE_FILE={fere:'sample_FEM_REM.xlsx',gmm:'sample_Dynamic_GMM.xlsx',unit:'sample_UnitRoot_Cointegration.xlsx'};
+
+/* ---------- formatting ---------- */
+function fmt(x,d=4){if(x===null||x===undefined||typeof x!=='number'||!isFinite(x))return '—';const a=Math.abs(x);if(a!==0&&(a>=1e7||a<1e-4))return x.toExponential(3);return x.toFixed(d);}
+function fmtP(p){if(p===null||p===undefined||!isFinite(p))return '—';if(p<0.0001)return '<0.0001';return p.toFixed(4);}
+const stars=p=>!isFinite(p)?'':p<0.01?'***':p<0.05?'**':p<0.1?'*':'';
+function cellStr(c){if(c===null||c===undefined)return '—';if(typeof c==='number')return fmt(c);if(typeof c==='object'){if('p' in c)return fmtP(c.p);if('i' in c)return isFinite(c.i)?String(c.i):'—';if('d' in c)return fmt(c.v,c.d);}return String(c);}
+function cellX(c){if(c===null||c===undefined)return '';if(typeof c==='number')return isFinite(c)?c:'';if(typeof c==='object'){if('p' in c)return isFinite(c.p)?c.p:'';if('i' in c)return c.i;if('d' in c)return isFinite(c.v)?c.v:'';}return String(c);}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- static i18n ---------- */
+function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=I18N[S.lang][el.dataset.i18n];});document.documentElement.lang=S.lang;
+  $('#lang-th').classList.toggle('on',S.lang==='th');$('#lang-en').classList.toggle('on',S.lang==='en');}
+function setLang(l){S.lang=l;applyI18n();renderSampleHint();if(S.rows){renderMapping();renderOptions();renderPreview();}if(S.res)renderResults();}
+
+/* ---------- method selection ---------- */
+document.querySelectorAll('.mcard').forEach(b=>b.addEventListener('click',()=>{
+  S.method=b.dataset.method;document.querySelectorAll('.mcard').forEach(x=>x.classList.toggle('on',x===b));
+  $('#step2').classList.remove('hidden');$('#step3').classList.remove('hidden');
+  S.res=null;$('#results').classList.add('hidden');destroyCharts();clearMsg();renderSampleHint();
+  if(S.rows){autoMap();renderMapping();renderOptions();}
+}));
+function renderSampleHint(){const h=$('#sampleHint');if(!S.method){h.textContent='';return;}
+  const t={fere:tr('ข้อมูลตัวอย่าง: 30 บริษัท × 10 ปี (2014–2023) ตัวแปร y, x1, x2, x3 — สร้างให้ผลกระทบเฉพาะตัวสัมพันธ์กับ x1 (คาดว่า Hausman จะเลือก FEM)','Sample: 30 firms × 10 years (2014–2023), variables y, x1, x2, x3 — the individual effect is built to correlate with x1, so Hausman should favour FEM.'),
+    gmm:tr('ข้อมูลตัวอย่าง: 60 หน่วย × 10 ปี ค่าจริงของ α (สัมประสิทธิ์ yₜ₋₁) = 0.5, x1 = 0.4, x2 = −0.3','Sample: 60 units × 10 years. True α (coefficient on yₜ₋₁) = 0.5, x1 = 0.4, x2 = −0.3.'),
+    unit:tr('ข้อมูลตัวอย่าง: 20 ประเทศ × 40 ปี x1, x2 เป็น random walk (I(1)) และ y มีความสัมพันธ์ระยะยาวกับ x1 (1.0) และ x2 (0.5)','Sample: 20 countries × 40 years. x1 and x2 are random walks (I(1)); y is cointegrated with x1 (1.0) and x2 (0.5).')}[S.method];
+  h.textContent='ⓘ '+t;}
+
+/* ---------- data loading ---------- */
+const drop=$('#drop'),fileInput=$('#fileInput');
+drop.addEventListener('click',()=>fileInput.click());
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over');});
+drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0]);});
+fileInput.addEventListener('change',()=>{if(fileInput.files[0])readFile(fileInput.files[0]);});
+function readFile(f){const r=new FileReader();r.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{defval:null,raw:true});if(!rows.length)throw new Error('empty');setData(rows,f.name);}
+  catch(err){showMsg('err',tr('อ่านไฟล์ไม่สำเร็จ: ตรวจสอบว่าเป็นไฟล์ Excel/CSV ที่มีหัวคอลัมน์ในแถวแรก','Could not read the file: make sure it is an Excel/CSV file with headers in the first row.'));}};r.readAsArrayBuffer(f);}
+function setData(rows,src){S.rows=rows;S.src=src;S.cols=Object.keys(rows[0]);rows.forEach(r=>Object.keys(r).forEach(k=>{if(!S.cols.includes(k))S.cols.push(k);}));
+  $('#fileName').textContent='✔ '+src;S.res=null;$('#results').classList.add('hidden');destroyCharts();clearMsg();
+  autoMap();$('#dataArea').classList.remove('hidden');renderMapping();renderOptions();renderPreview();}
+function isNumCol(c){let n=0,ok=0;for(const r of S.rows){const v=r[c];if(v===null||v==='')continue;n++;if(isFinite(Number(String(v).replace(/,/g,''))))ok++;}return n>0&&ok/n>0.95;}
+function autoMap(){const c=S.cols;const id=c.find(x=>/^(id|firm|country|entity|code|unit|company|province|ประเทศ|บริษัท|จังหวัด|รหัส)/i.test(x))||c[0];
+  const time=c.find(x=>x!==id&&/(year|time|period|date|quarter|month|ปี|เวลา|^t$)/i.test(x))||c.find(x=>x!==id)||c[1];
+  const nums=c.filter(x=>x!==id&&x!==time&&isNumCol(x));const y=nums.find(x=>/^y$/i.test(x))||nums[0]||'';
+  S.map={id,time,y,x:nums.filter(x=>x!==y)};}
+function renderMapping(){const opts=sel=>S.cols.map(c=>`<option value="${esc(c)}" ${c===sel?'selected':''}>${esc(c)}</option>`).join('');
+  $('#selId').innerHTML=opts(S.map.id);$('#selTime').innerHTML=opts(S.map.time);
+  const nums=S.cols.filter(c=>c!==S.map.id&&c!==S.map.time&&isNumCol(c));
+  $('#selY').innerHTML=nums.map(c=>`<option value="${esc(c)}" ${c===S.map.y?'selected':''}>${esc(c)}</option>`).join('');
+  if(!nums.includes(S.map.y)){S.map.y=nums[0]||'';}
+  $('#chkX').innerHTML=nums.filter(c=>c!==S.map.y).map(c=>`<label><input type="checkbox" value="${esc(c)}" ${S.map.x.includes(c)?'checked':''}> ${esc(c)}</label>`).join('')||`<span class="hint">${tr('ไม่มีตัวแปรเชิงตัวเลขเหลือ','No numeric variables left')}</span>`;
+  $('#chkX').querySelectorAll('input').forEach(i=>i.addEventListener('change',()=>{S.map.x=[...$('#chkX').querySelectorAll('input:checked')].map(x=>x.value);}));}
+['#selId','#selTime'].forEach(s=>$(s).addEventListener('change',()=>{S.map.id=$('#selId').value;S.map.time=$('#selTime').value;S.map.x=S.map.x.filter(x=>x!==S.map.id&&x!==S.map.time);if(S.map.y===S.map.id||S.map.y===S.map.time)S.map.y='';renderMapping();}));
+$('#selY').addEventListener('change',()=>{S.map.y=$('#selY').value;S.map.x=S.map.x.filter(x=>x!==S.map.y);renderMapping();});
+function renderOptions(){const o=S.opt;let h='';
+  if(S.method==='fere'){h=`<label class="opt-line"><input type="checkbox" id="oRobust" ${o.robust?'checked':''}> ${tr('ใช้ค่าความคลาดเคลื่อนมาตรฐานแบบ Cluster-robust (จัดกลุ่มตามหน่วย)','Use cluster-robust standard errors (clustered by unit)')}</label>
+    <div class="hint">${tr('ระบบจะประมาณ Pooled OLS, FEM (Within) และ REM (Swamy–Arora GLS) พร้อมกัน แล้วทดสอบเพื่อเลือกแบบจำลองที่เหมาะสม','Pooled OLS, FEM (within) and REM (Swamy–Arora GLS) are estimated together, then tested to choose the right model.')}</div>`;}
+  else if(S.method==='gmm'){h=`<div class="field"><label>${tr('จำนวน lag สูงสุดของตัวแปรเครื่องมือ (yₜ₋₂, yₜ₋₃, …)','Maximum lag depth of GMM instruments (yₜ₋₂, yₜ₋₃, …)')}</label>
+    <select id="oMaxLag">${[0,2,3,4,5,6].map(v=>`<option value="${v}" ${o.maxLag===v?'selected':''}>${v===0?tr('ใช้ทั้งหมด','All available'):v}</option>`).join('')}</select></div>
+    <label class="opt-line"><input type="checkbox" id="oCollapse" ${o.collapse?'checked':''}> ${tr('ยุบตัวแปรเครื่องมือ (Collapse instruments) เพื่อลดจำนวน instruments','Collapse instruments to reduce instrument count')}</label>
+    <div class="hint">${tr('ตัวแปร X ถือเป็นตัวแปรภายนอกอย่างเคร่งครัด (strictly exogenous) ใช้ ΔX เป็นเครื่องมือแบบ IV-style; ต้องการข้อมูลอย่างน้อย 4 ช่วงเวลา','X variables are treated as strictly exogenous (ΔX used as IV-style instruments); at least 4 periods are required.')}</div>`;}
+  else if(S.method==='unit'){h=`<div class="field"><label>${tr('จำนวน lag ใน ADF regression (Fisher-ADF, Choi, Kao ADF)','ADF lag order (Fisher-ADF, Choi, Kao ADF)')}</label>
+    <select id="oLags">${[0,1,2,3,4].map(v=>`<option value="${v}" ${o.lags===v?'selected':''}>${v}</option>`).join('')}</select></div>
+    <label class="opt-line"><input type="checkbox" id="oCoint" ${o.coint?'checked':''}> ${tr('ทดสอบ Cointegration (Kao) และประมาณค่าระยะยาว (Panel DOLS) ระหว่าง Y และ X','Test cointegration (Kao) and estimate long-run coefficients (Panel DOLS) between Y and X')}</label>
+    <div class="hint">${tr('ทดสอบ unit root กับตัวแปร Y และ X ที่เลือก ทั้งระดับ level และ first difference (มีค่าคงที่, ไม่มีแนวโน้ม) ต้องการข้อมูลอย่างน้อย 8 ช่วงเวลา','Unit root tests are run on Y and the selected X, in levels and first differences (intercept, no trend); at least 8 periods are required.')}</div>`;}
+  $('#optArea').innerHTML=h;
+  const on=(id,f)=>{const el=$(id);if(el)el.addEventListener('change',f);};
+  on('#oRobust',e=>S.opt.robust=e.target.checked);on('#oMaxLag',e=>S.opt.maxLag=+e.target.value);on('#oCollapse',e=>S.opt.collapse=e.target.checked);
+  on('#oLags',e=>S.opt.lags=+e.target.value);on('#oCoint',e=>S.opt.coint=e.target.checked);}
+function renderPreview(){const rows=S.rows.slice(0,8);$('#previewMeta').textContent=`${S.src} · ${S.rows.length.toLocaleString()} ${tr('แถว','rows')} · ${S.cols.length} ${tr('คอลัมน์','columns')}`;
+  $('#previewTbl').innerHTML=`<table class="dt"><thead><tr>${S.cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${S.cols.map(c=>`<td>${esc(r[c]??'')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;}
+
+/* ---------- sample buttons ---------- */
+$('#btnSample').addEventListener('click',()=>{if(!S.method)return;setData(Eng.sample(S.method),tr('ข้อมูลตัวอย่าง','Sample data')+' — '+METHOD_NAME[S.method][1]);
+  if(S.method==='unit')S.map.x=['x1','x2'];renderMapping();showMsg('ok',tr('โหลดข้อมูลตัวอย่างแล้ว กด "ประมวลผล" ได้เลย','Sample data loaded — press "Run".'));});
+$('#btnDlSample').addEventListener('click',()=>{if(!S.method)return;const rows=Eng.sample(S.method);const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'data');
+  const readme=[[tr('คำอธิบายไฟล์ตัวอย่าง','Sample file description')],[METHOD_NAME[S.method][1]],[],[tr('คอลัมน์','Column'),tr('ความหมาย','Meaning')],
+    ['id',tr('รหัสหน่วยภาคตัดขวาง (บริษัท/ประเทศ)','Cross-section unit identifier')],['year',tr('ช่วงเวลา','Time period')],['y',tr('ตัวแปรตาม','Dependent variable')],
+    ['x1, x2, ...',tr('ตัวแปรอิสระ','Independent variables')],[],[$('#sampleHint').textContent.replace('ⓘ ','')]];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(readme),'readme');XLSX.writeFile(wb,SAMPLE_FILE[S.method]);});
+
+/* ---------- messages ---------- */
+function showMsg(type,text){$('#msg').innerHTML=`<div class="msg ${type}">${esc(text)}</div>`;}
+function clearMsg(){$('#msg').innerHTML='';}
+const ERRS={ERR_FEW_GROUPS:['จำนวนหน่วย (cross-sections) น้อยเกินไป','Too few cross-section units'],ERR_DF:['องศาอิสระไม่พอ: ข้อมูลน้อยเกินไปเมื่อเทียบกับจำนวนตัวแปร','Not enough degrees of freedom for this number of variables'],
+  ERR_T4:['Dynamic GMM ต้องการพาเนลแบบสมดุลที่มีอย่างน้อย 4 ช่วงเวลา','Dynamic GMM needs a balanced panel with at least 4 periods'],ERR_T8:['การทดสอบ unit root ต้องการพาเนลแบบสมดุลที่มีอย่างน้อย 8 ช่วงเวลา','Unit root tests need a balanced panel with at least 8 periods'],
+  ERR_INSTR:['จำนวนตัวแปรเครื่องมือน้อยกว่าจำนวนพารามิเตอร์ ลองเพิ่ม lag สูงสุดของ instrument','Fewer instruments than parameters — increase the maximum instrument lag']};
+
+/* ---------- run ---------- */
+$('#btnRun').addEventListener('click',()=>{clearMsg();
+  if(!S.method)return showMsg('err',tr('กรุณาเลือกวิธีการวิเคราะห์','Please choose a method'));
+  if(!S.rows)return showMsg('err',tr('กรุณาแนบไฟล์ข้อมูลหรือกด "ทดลองข้อมูลตัวอย่าง"','Please upload a file or click "Try sample data"'));
+  const m=S.map;if(!m.id||!m.time||!m.y)return showMsg('err',tr('กรุณากำหนดคอลัมน์ ID, Time และ Y','Please set the ID, Time and Y columns'));
+  if(m.id===m.time)return showMsg('err',tr('คอลัมน์ ID และ Time ต้องไม่ซ้ำกัน','ID and Time must be different columns'));
+  if(S.method!=='unit'&&m.x.length===0)return showMsg('err',tr('กรุณาเลือกตัวแปรอิสระอย่างน้อย 1 ตัว','Select at least one independent variable'));
+  const btn=$('#btnRun');btn.disabled=true;$('#runIco').innerHTML='<span class="spinner"></span>';
+  setTimeout(()=>{try{const vars=[m.y,...m.x];const P=Eng.buildPanel(S.rows,m.id,m.time,vars);
+      if(S.method==='fere')S.res=Eng.runFERE(P,m.y,m.x,S.opt.robust);
+      else if(S.method==='gmm')S.res=Eng.runGMM(P,m.y,m.x,S.opt);
+      else S.res=Eng.runUnit(P,vars,S.opt.lags,S.opt.coint,m.y,m.x);
+      S.res.dropped=P.dropped;S.res.tlabels=P.tlabels;S.view='table';renderResults();
+      $('#results').classList.remove('hidden');$('#results').scrollIntoView({behavior:'smooth',block:'start'});
+      let note=tr('ประมวลผลสำเร็จ','Done');if(P.dropped)note+=tr(` · ตัดแถวที่ข้อมูลไม่ครบ/ไม่ใช่ตัวเลข ${P.dropped} แถว`,` · ${P.dropped} rows with missing/non-numeric values dropped`);
+      if(S.res.removed)note+=tr(` · ตัดหน่วยที่ข้อมูลไม่ครบทุกช่วงเวลา ${S.res.removed} หน่วย (ต้องใช้พาเนลสมดุล)`,` · ${S.res.removed} units with incomplete periods dropped (balanced panel required)`);
+      showMsg('ok',note);}
+    catch(err){console.error(err);const e=ERRS[err.message];showMsg('err',e?tr(e[0],e[1]):tr('เกิดข้อผิดพลาดในการคำนวณ: ','Computation error: ')+err.message);}
+    finally{btn.disabled=false;$('#runIco').textContent='⚙';}},40);});
+
+/* ---------- results rendering ---------- */
+$('#vTable').addEventListener('click',()=>{S.view='table';renderResults();});
+$('#vChart').addEventListener('click',()=>{S.view='chart';renderResults();});
+function renderResults(){if(!S.res)return;$('#vTable').classList.toggle('on',S.view==='table');$('#vChart').classList.toggle('on',S.view==='chart');
+  $('#summary').innerHTML=buildSummary();
+  $('#tablesView').classList.toggle('hidden',S.view!=='table');$('#chartsView').classList.toggle('hidden',S.view!=='chart');
+  if(S.view==='table'){$('#tablesView').innerHTML=buildTables().map(renderTable).join('');destroyCharts();}
+  else renderCharts();}
+function renderTable(t,i){const head=`<tr>${t.headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`;
+  const body=t.rows.map(r=>`<tr>${r.map((c,j)=>{const s=cellStr(c);const isTxt=typeof c==='string'&&j>0&&t.txtCols&&t.txtCols.includes(j);return `<td class="${isTxt?'txt':''}">${esc(s)}</td>`;}).join('')}</tr>`).join('');
+  const notes=t.notes&&t.notes.length?`<div class="notes"><div class="nh">${tr('คำอธิบายค่าสถิติ','What the statistics mean')}</div><dl>${t.notes.map(n=>`<dt>${esc(n[0])}</dt><dd>${esc(n[1])}</dd>`).join('')}</dl></div>`:'';
+  const interp=t.interp&&t.interp.length?`<div class="interp">${t.interp.map(s=>`<div>➜ ${esc(s)}</div>`).join('')}</div>`:'';
+  return `<div class="tcard"><h3><span class="no">${tr('ตาราง','Table')} ${i+1}</span>${esc(t.title)}</h3>${t.sub?`<p class="sub">${esc(t.sub)}</p>`:''}<div class="tbl-wrap"><table class="dt"><thead>${head}</thead><tbody>${body}</tbody></table></div>${notes}${interp}</div>`;}
+
+/* ---------- shared table pieces ---------- */
+function coefTable(names,b,se,dist,df){const crit=dist==='t'?Eng.tCrit(df):1.959964;
+  return names.map((nm,i)=>{const s=se[i];const st=isFinite(s)&&s>0?b[i]/s:NaN;const p=isFinite(st)?(dist==='t'?Eng.pT2(st,df):2*(1-Eng.normCdf(Math.abs(st)))):NaN;
+    return [nm,b[i],isFinite(s)?s:null,isFinite(st)?st:null,{p},isFinite(s)?b[i]-crit*s:null,isFinite(s)?b[i]+crit*s:null,stars(p)];});}
+function coefHeaders(dist){return [tr('ตัวแปร','Variable'),tr('ค่าสัมประสิทธิ์','Coef.'),'Std. Err.',dist==='t'?'t':'z',dist==='t'?'P>|t|':'P>|z|',tr('95% CI ล่าง','95% CI low'),tr('95% CI บน','95% CI high'),'Sig.'];}
+function coefNotes(dist,robust){return [
+  [tr('ค่าสัมประสิทธิ์','Coef.'),tr('ขนาดและทิศทางของผลกระทบ: เมื่อ X เพิ่มขึ้น 1 หน่วย Y เปลี่ยนแปลงเท่ากับค่านี้ โดยกำหนดให้ปัจจัยอื่นคงที่','Size and direction of the effect: a one-unit rise in X changes Y by this amount, other things equal.')],
+  ['Std. Err.',robust?tr('ค่าความคลาดเคลื่อนมาตรฐานแบบ cluster-robust ทนต่อปัญหา heteroskedasticity และ autocorrelation ภายในหน่วย','Cluster-robust standard error, valid under heteroskedasticity and within-unit autocorrelation.'):tr('ค่าความคลาดเคลื่อนมาตรฐาน วัดความไม่แน่นอนของการประมาณค่าสัมประสิทธิ์','Standard error: the sampling uncertainty of the coefficient.')],
+  [dist==='t'?'t':'z',tr(`สถิติทดสอบ = Coef. ÷ Std. Err. ใช้ทดสอบ H₀: β = 0 (แจกแจงแบบ ${dist==='t'?'t':'ปกติมาตรฐาน'})`,`Test statistic = Coef. ÷ Std. Err., testing H₀: β = 0 (${dist==='t'?'t':'standard normal'} distribution).`)],
+  ['P-value',tr('ความน่าจะเป็นที่จะได้ค่าสถิติสุดโต่งเท่านี้หาก H₀ เป็นจริง ถ้า p < 0.05 ถือว่าตัวแปรมีนัยสำคัญทางสถิติที่ระดับ 5%','Probability of a statistic this extreme if H₀ were true; p < 0.05 means significant at the 5% level.')],
+  ['95% CI',tr('ช่วงความเชื่อมั่น 95% ของค่าสัมประสิทธิ์ ถ้าช่วงไม่ครอบคลุมศูนย์แสดงว่ามีนัยสำคัญที่ระดับ 5%','95% confidence interval; if it excludes zero the coefficient is significant at 5%.')],
+  ['Sig.','*** p < 0.01, ** p < 0.05, * p < 0.10']];}
+function sigInterp(names,b,se,dist,df,skipFirst){const out=[];names.forEach((nm,i)=>{if(skipFirst&&i===0)return;if(!isFinite(se[i]))return;const st=b[i]/se[i];const p=dist==='t'?Eng.pT2(st,df):2*(1-Eng.normCdf(Math.abs(st)));
+  if(p<0.05)out.push(tr(`${nm} มีผลต่อ ${S.res.yv} อย่างมีนัยสำคัญ (p = ${fmtP(p)}) ในทิศทาง${b[i]>0?'บวก':'ลบ'}: เพิ่มขึ้น 1 หน่วย → ${S.res.yv} ${b[i]>0?'เพิ่มขึ้น':'ลดลง'} ${fmt(Math.abs(b[i]))} หน่วย`,`${nm} has a significant ${b[i]>0?'positive':'negative'} effect on ${S.res.yv} (p = ${fmtP(p)}): a one-unit rise ${b[i]>0?'raises':'lowers'} ${S.res.yv} by ${fmt(Math.abs(b[i]))}.`));
+  else out.push(tr(`${nm} ไม่มีนัยสำคัญทางสถิติที่ระดับ 5% (p = ${fmtP(p)})`,`${nm} is not significant at 5% (p = ${fmtP(p)}).`));});return out;}
+const decide=(p,a,b)=>p<0.05?a:b;
+
+/* ---------- summary banner ---------- */
+function buildSummary(){const R=S.res;let items=[];let head='';
+  if(R.method==='fere'){const fe=R.FE.Fup<0.05,bp=R.bp.p<0.05,h=R.haus&&isFinite(R.haus.p)?R.haus.p<0.05:null;
+    let best;if(!fe&&!bp)best='Pooled OLS';else if(fe&&!bp)best='FEM';else if(!fe&&bp)best='REM';else best=h===null?'FEM':(h?'FEM':'REM');
+    head=tr(`แบบจำลองที่แนะนำ: <b>${best}</b>`,`Recommended model: <b>${best}</b>`);
+    items=[tr(`F-test (Pooled vs FEM): p = ${fmtP(R.FE.Fup)} → ${fe?'มีผลกระทบเฉพาะตัว':'ไม่พบผลกระทบเฉพาะตัว'}`,`F-test (Pooled vs FEM): p = ${fmtP(R.FE.Fup)} → ${fe?'individual effects present':'no individual effects'}`),
+      tr(`Breusch–Pagan LM (Pooled vs REM): p = ${fmtP(R.bp.p)} → ${bp?'มีความแปรปรวนของผลกระทบเฉพาะตัว':'ไม่พบ'}`,`Breusch–Pagan LM (Pooled vs REM): p = ${fmtP(R.bp.p)} → ${bp?'random effects variance present':'none detected'}`)];
+    if(R.haus)items.push(tr(`Hausman (FEM vs REM): p = ${fmtP(R.haus.p)} → ${h?'เลือก FEM':'เลือก REM'}`,`Hausman (FEM vs REM): p = ${fmtP(R.haus.p)} → ${h?'choose FEM':'choose REM'}`));}
+  else if(R.method==='gmm'){const ok2=R.ar2.p>=0.05,okH=R.hansen.p>=0.05;const a=R.two.b[0];const inB=a>Math.min(R.fe.b[0],R.ols.b[0])&&a<Math.max(R.fe.b[0],R.ols.b[0]);
+    head=tr(`ค่าสัมประสิทธิ์ของ ${R.names[0]} (two-step) = <b>${fmt(a)}</b> ${ok2&&okH?'· ผ่านการทดสอบความถูกต้องของแบบจำลอง':'· ควรตรวจสอบการทดสอบวินิจฉัย'}`,`Coefficient on ${R.names[0]} (two-step) = <b>${fmt(a)}</b> ${ok2&&okH?'· specification tests passed':'· check the diagnostics'}`);
+    items=[tr(`AR(2): p = ${fmtP(R.ar2.p)} → ${ok2?'ไม่มีสหสัมพันธ์อันดับ 2 (ดี)':'พบสหสัมพันธ์อันดับ 2 (instrument อาจไม่ถูกต้อง)'}`,`AR(2): p = ${fmtP(R.ar2.p)} → ${ok2?'no second-order autocorrelation (good)':'second-order autocorrelation found (instruments may be invalid)'}`),
+      tr(`Hansen J: p = ${fmtP(R.hansen.p)} → ${okH?'ตัวแปรเครื่องมือใช้ได้':'ตัวแปรเครื่องมืออาจไม่ถูกต้อง'}`,`Hansen J: p = ${fmtP(R.hansen.p)} → ${okH?'instruments valid':'instruments may be invalid'}`),
+      tr(`ค่า α อยู่ระหว่าง FE (${fmt(R.fe.b[0])}) และ OLS (${fmt(R.ols.b[0])}): ${inB?'ใช่ (สอดคล้องกับทฤษฎี)':'ไม่ใช่ (ควรระวัง)'}`,`α lies between FE (${fmt(R.fe.b[0])}) and OLS (${fmt(R.ols.b[0])}): ${inB?'yes (as theory predicts)':'no (treat with caution)'}`),
+      tr(`จำนวน instruments = ${R.L}, จำนวนหน่วย = ${R.N}${R.L>R.N?' (instruments มากกว่าจำนวนหน่วย: Hansen test อาจอ่อนแอ)':''}`,`Instruments = ${R.L}, units = ${R.N}${R.L>R.N?' (more instruments than units: the Hansen test may be weak)':''}`)];}
+  else{head=tr('ลำดับความนิ่งของตัวแปร (Order of integration)','Order of integration');
+    items=R.vars.map(v=>`${v}: <b>${ordLabel(R.order[v].ord)}</b>`);
+    if(R.kao){const sig=R.kao.stats.filter(s=>s.p<0.05).length;items.push(tr(`Kao cointegration: ${sig}/5 สถิติปฏิเสธ H₀ (ไม่มี cointegration) → ${sig>=3?'<b>มีความสัมพันธ์ระยะยาว</b>':'ไม่พบหลักฐานชัดเจนของความสัมพันธ์ระยะยาว'}`,`Kao cointegration: ${sig}/5 statistics reject H₀ (no cointegration) → ${sig>=3?'<b>a long-run relationship exists</b>':'no clear evidence of cointegration'}`));}}
+  return `<div class="summary">${head}<ul>${items.map(s=>`<li>${s}</li>`).join('')}</ul></div>`;}
+function ordLabel(o){return {'I(0)':tr('I(0) — นิ่งที่ระดับ level','I(0) — stationary in levels'),'I(1)':tr('I(1) — นิ่งที่ first difference','I(1) — stationary in first differences'),
+  mixed0:tr('ผลการทดสอบไม่สอดคล้องกันที่ระดับ level (น่าจะใกล้ I(0)/I(1))','Mixed evidence in levels (borderline I(0)/I(1))'),mixed1:tr('ผลไม่สอดคล้องกันที่ first difference','Mixed evidence in first differences'),'I(2)':tr('อาจเป็น I(2) หรือสรุปไม่ได้','Possibly I(2) or inconclusive')}[o];}
+
+/* ---------- tables by method ---------- */
+function buildTables(){const R=S.res;if(R.method==='fere')return tablesFERE(R);if(R.method==='gmm')return tablesGMM(R);return tablesUnit(R);}
+
+function tablesFERE(R){const T=[];const rob=R.robust;
+  T.push({sheet:'Descriptive',title:tr('สถิติเชิงพรรณนาและโครงสร้างความแปรปรวนของพาเนล','Descriptive statistics and panel variance decomposition'),
+    sub:tr(`จำนวนข้อมูล ${R.n} ค่าสังเกต · ${R.N} หน่วย · T ต่ำสุด/เฉลี่ย/สูงสุด = ${R.Tmin}/${fmt(R.Tavg,2)}/${R.Tmax} · ${R.balanced?'พาเนลสมดุล':'พาเนลไม่สมดุล'}`,`${R.n} observations · ${R.N} units · T min/avg/max = ${R.Tmin}/${fmt(R.Tavg,2)}/${R.Tmax} · ${R.balanced?'balanced':'unbalanced'} panel`),
+    headers:[tr('ตัวแปร','Variable'),'Obs',tr('ค่าเฉลี่ย','Mean'),'SD overall','SD between','SD within','Min','Max'],
+    rows:R.desc.map(d=>[d.v,{i:d.n},d.mean,d.sd,d.between,d.within,d.min,d.max]),
+    notes:[['SD overall',tr('ส่วนเบี่ยงเบนมาตรฐานของข้อมูลทั้งหมด','Standard deviation across all observations.')],['SD between',tr('ความแปรปรวนระหว่างหน่วย: ส่วนเบี่ยงเบนมาตรฐานของค่าเฉลี่ยรายหน่วย (x̄ᵢ)','Between variation: SD of unit means (x̄ᵢ).')],['SD within',tr('ความแปรปรวนภายในหน่วยตามเวลา: SD ของ xᵢₜ − x̄ᵢ + x̄ ซึ่ง FEM ใช้เพียงส่วนนี้ในการประมาณค่า','Within variation over time: SD of xᵢₜ − x̄ᵢ + x̄; FEM uses only this part.')]],
+    interp:R.desc.slice(1).filter(d=>d.within<0.1*d.between).map(d=>tr(`${d.v} มีความแปรปรวนภายในหน่วยน้อยมาก FEM อาจประมาณค่าได้ไม่แม่นยำ`,`${d.v} has very little within variation, so FEM may estimate it imprecisely.`))});
+  const po=R.pooled;T.push({sheet:'Pooled OLS',title:'Pooled OLS',sub:tr('ไม่ควบคุมผลกระทบเฉพาะตัว (ใช้เป็นแบบจำลองพื้นฐาน)','No individual effects (baseline model)'),headers:coefHeaders('t'),rows:coefTable(po.names,po.b,po.se,'t',po.df),notes:coefNotes('t',rob),interp:[]});
+  const fe=R.FE;T.push({sheet:'FEM',title:tr('Fixed Effects Model (FEM, Within estimator)','Fixed Effects Model (FEM, within estimator)'),
+    sub:tr('ขจัดผลกระทบเฉพาะตัว αᵢ โดยการหักค่าเฉลี่ยรายหน่วย (within transformation)','Removes individual effects αᵢ by demeaning within each unit'),headers:coefHeaders('t'),rows:coefTable(fe.names,fe.b,fe.se,'t',fe.df),
+    notes:[...coefNotes('t',rob),['_cons',tr('ค่าคงที่ของ FEM = ค่าเฉลี่ยของ αᵢ (ȳ − x̄′β) ไม่รายงาน Std. Err.','FEM constant = average αᵢ (ȳ − x̄′β); no standard error reported.')]],interp:sigInterp(fe.names,fe.b,fe.se,'t',fe.df,true)});
+  if(R.RE){const re=R.RE;T.push({sheet:'REM',title:tr('Random Effects Model (REM, GLS แบบ Swamy–Arora)','Random Effects Model (REM, Swamy–Arora GLS)'),
+    sub:tr('สมมติว่าผลกระทบเฉพาะตัว uᵢ เป็นตัวแปรสุ่มที่ไม่สัมพันธ์กับ X','Assumes the individual effect uᵢ is random and uncorrelated with X'),headers:coefHeaders('z'),rows:coefTable(re.names,re.b,re.se,'z',Infinity),notes:coefNotes('z',rob),interp:sigInterp(re.names,re.b,re.se,'z',Infinity,true)});}
+  const re=R.RE||{};const P=R.pooled;
+  T.push({sheet:'Model fit',title:tr('ค่าสถิติความเหมาะสมของแบบจำลอง','Model fit statistics'),headers:[tr('ค่าสถิติ','Statistic'),'Pooled OLS','FEM','REM'],
+    rows:[[tr('จำนวนค่าสังเกต','Observations'),{i:R.n},{i:R.n},{i:R.n}],[tr('จำนวนหน่วย','Groups'),{i:R.N},{i:R.N},{i:R.N}],
+      ['R² within',null,fe.R2w,re.R2w],['R² between',null,fe.R2b,re.R2b],['R² overall',P.R2,fe.R2o,re.R2o],['Adj. R²',P.adjR2,null,null],
+      [tr('F-stat / Wald χ²','F-stat / Wald χ²'),P.F,fe.F,re.wald],[tr('p-value ของ F / Wald','p-value (F / Wald)'),{p:P.Fp},{p:fe.Fp},{p:re.waldP}],
+      ['σ_u',null,fe.sigU,re.sigU],['σ_e',P.sigma,fe.sigE,re.sigE],['ρ (rho)',null,fe.rho,re.rho],['θ (theta, mean)',null,null,re.thetaMean],['corr(uᵢ, Xβ)',null,fe.corr_u_xb,tr('0 (สมมติ)','0 (assumed)')]],
+    notes:[['R² within',tr('สัดส่วนความแปรปรวนภายในหน่วย (ตามเวลา) ที่อธิบายได้ — ตัวชี้วัดหลักของ FEM','Share of within-unit (over time) variation explained — the key fit measure for FEM.')],
+      ['R² between',tr('สัดส่วนความแปรปรวนระหว่างหน่วยที่อธิบายได้ (ใช้ค่าเฉลี่ยรายหน่วย)','Share of between-unit variation explained (using unit means).')],
+      ['R² overall',tr('สัดส่วนความแปรปรวนรวมทั้งหมดที่อธิบายได้','Share of total variation explained.')],
+      ['F / Wald',tr('ทดสอบว่าค่าสัมประสิทธิ์ความชันทั้งหมดเป็นศูนย์พร้อมกัน (REM ใช้ Wald χ²)','Joint test that all slope coefficients are zero (REM uses Wald χ²).')],
+      ['σ_u',tr('ส่วนเบี่ยงเบนมาตรฐานของผลกระทบเฉพาะตัว (ความแตกต่างระหว่างหน่วยที่ไม่เปลี่ยนตามเวลา)','SD of the individual effects (time-invariant differences between units).')],
+      ['σ_e',tr('ส่วนเบี่ยงเบนมาตรฐานของค่าคลาดเคลื่อนเชิงสุ่ม (idiosyncratic error)','SD of the idiosyncratic error.')],
+      ['ρ',tr('σ_u² / (σ_u² + σ_e²) สัดส่วนความแปรปรวนที่มาจากผลกระทบเฉพาะตัว ยิ่งสูงยิ่งต้องควบคุม αᵢ','σ_u² / (σ_u² + σ_e²): share of variance due to individual effects; higher means αᵢ matters more.')],
+      ['θ',tr(`ค่าถ่วงน้ำหนักการหักค่าเฉลี่ยของ REM (0 = Pooled OLS, 1 = FEM) ค่าต่ำสุด–สูงสุด ${fmt(re.thetaMin)}–${fmt(re.thetaMax)}`,`REM quasi-demeaning weight (0 = Pooled OLS, 1 = FEM); range ${fmt(re.thetaMin)}–${fmt(re.thetaMax)}.`)],
+      ['corr(uᵢ, Xβ)',tr('สหสัมพันธ์ระหว่างผลกระทบเฉพาะตัวกับส่วนที่อธิบายได้ ถ้าห่างจากศูนย์มาก สมมติฐานของ REM อาจไม่จริง','Correlation between individual effects and the fitted part; far from zero suggests the REM assumption fails.')]],
+    interp:[tr(`ρ ของ FEM = ${fmt(fe.rho)}: ${(fe.rho*100).toFixed(1)}% ของความแปรปรวนของค่าคลาดเคลื่อนมาจากความแตกต่างเฉพาะตัวของแต่ละหน่วย`,`FEM ρ = ${fmt(fe.rho)}: ${(fe.rho*100).toFixed(1)}% of the error variance comes from unit-specific differences.`)]});
+  const H=R.haus;const rows=[[tr('F-test (ผลกระทบเฉพาะตัว)','F-test (individual effects)'),tr('Pooled OLS vs FEM','Pooled OLS vs FEM'),fe.Fu,`F(${fe.FuDf[0]}, ${fe.FuDf[1]})`,{p:fe.Fup},decide(fe.Fup,tr('ปฏิเสธ H₀ → FEM','Reject H₀ → FEM'),tr('ไม่ปฏิเสธ H₀ → Pooled','Do not reject → Pooled'))],
+    ['Breusch–Pagan LM',tr('Pooled OLS vs REM','Pooled OLS vs REM'),R.bp.stat,'χ²(1)',{p:R.bp.p},decide(R.bp.p,tr('ปฏิเสธ H₀ → REM','Reject H₀ → REM'),tr('ไม่ปฏิเสธ H₀ → Pooled','Do not reject → Pooled'))]];
+  if(H)rows.push(['Hausman',tr('FEM vs REM','FEM vs REM'),H.stat,`χ²(${H.df})`,{p:H.p},H.neg?tr('ค่าสถิติติดลบ: ใช้ FEM อย่างระมัดระวัง','Negative statistic: lean towards FEM'):decide(H.p,tr('ปฏิเสธ H₀ → FEM','Reject H₀ → FEM'),tr('ไม่ปฏิเสธ H₀ → REM','Do not reject → REM'))]);
+  T.push({sheet:'Specification tests',title:tr('การทดสอบเพื่อเลือกแบบจำลอง','Model selection tests'),headers:[tr('การทดสอบ','Test'),tr('เปรียบเทียบ','Comparison'),tr('ค่าสถิติ','Statistic'),tr('การแจกแจง','Distribution'),'P-value',tr('ผลสรุป (α = 0.05)','Decision (α = 0.05)')],txtCols:[1,5],rows,
+    notes:[['F-test',tr('H₀: ผลกระทบเฉพาะตัว αᵢ ของทุกหน่วยเท่ากัน (Pooled OLS เพียงพอ) ถ้าปฏิเสธ แสดงว่า FEM ดีกว่า Pooled OLS','H₀: all αᵢ are equal (Pooled OLS is adequate). Rejection favours FEM over Pooled OLS.')],
+      ['BP LM',tr('H₀: σ_u² = 0 (ไม่มีผลกระทบเชิงสุ่ม) ถ้าปฏิเสธ แสดงว่า REM ดีกว่า Pooled OLS','H₀: σ_u² = 0 (no random effect). Rejection favours REM over Pooled OLS.')],
+      ['Hausman',tr('H₀: uᵢ ไม่สัมพันธ์กับ X (REM คงเส้นคงวาและมีประสิทธิภาพกว่า) ถ้าปฏิเสธ แสดงว่า REM เอนเอียง ควรใช้ FEM','H₀: uᵢ is uncorrelated with X (REM is consistent and efficient). Rejection means REM is biased; use FEM.')],
+      [tr('หมายเหตุ','Note'),tr('Hausman test คำนวณจากเมทริกซ์ความแปรปรวนแบบปกติ (non-robust) เสมอ','The Hausman test always uses the conventional (non-robust) covariance matrices.')]],interp:[]});
+  if(R.RE&&H){T.push({sheet:'Coef comparison',title:tr('เปรียบเทียบค่าสัมประสิทธิ์ระหว่างแบบจำลอง','Coefficient comparison across models'),headers:[tr('ตัวแปร','Variable'),'Pooled OLS','FEM','REM','FEM − REM','√diag(V_FE − V_RE)'],
+    rows:R.xv.map((x,j)=>[x,P.b[j+1],fe.b[j+1],R.RE.b[j+1],H.d[j],H.sdDiff[j]]),
+    notes:[['FEM − REM',tr('ความแตกต่างของค่าสัมประสิทธิ์ ถ้าต่างกันมากเมื่อเทียบกับ √diag(V_FE − V_RE) แสดงว่า uᵢ สัมพันธ์กับ X','Coefficient difference; large relative to √diag(V_FE − V_RE) indicates uᵢ is correlated with X.')]],interp:[]});}
+  T.push({sheet:'Fixed effects',title:tr('ผลกระทบเฉพาะตัวที่ประมาณได้ (αᵢ) จาก FEM','Estimated individual effects (αᵢ) from FEM'),headers:['ID','αᵢ',tr('uᵢ = αᵢ − ᾱ','uᵢ = αᵢ − ᾱ'),'Tᵢ',`${tr('ค่าเฉลี่ย','Mean')} ${R.yv}`],
+    rows:R.ids.map((id,i)=>[id,fe.alpha[i],fe.u[i],{i:R.Ti[i]},R.ybar[i]]),
+    notes:[['αᵢ',tr('ค่าคงที่เฉพาะของหน่วย i = ȳᵢ − x̄ᵢ′β สะท้อนปัจจัยที่ไม่เปลี่ยนตามเวลาและสังเกตไม่ได้','Unit-specific intercept = ȳᵢ − x̄ᵢ′β, capturing unobserved time-invariant factors.')],['uᵢ',tr('ส่วนเบี่ยงเบนจากค่าคงที่เฉลี่ย ค่าบวก = หน่วยนี้มีระดับ Y สูงกว่าค่าเฉลี่ยเมื่อ X เท่ากัน','Deviation from the average intercept; positive = higher Y than average at the same X.')]],interp:[]});
+  return T;}
+
+function tablesGMM(R){const T=[];const p=R.names.length;
+  T.push({sheet:'Setup',title:tr('โครงสร้างข้อมูลและการตั้งค่าตัวแปรเครื่องมือ','Panel structure and instrument setup'),headers:[tr('รายการ','Item'),tr('ค่า','Value')],txtCols:[1],
+    rows:[[tr('จำนวนหน่วย (N)','Units (N)'),{i:R.N}],[tr('จำนวนช่วงเวลา (T)','Periods (T)'),{i:R.T}],[tr('ค่าสังเกตที่ใช้ในสมการผลต่าง','Observations in differenced equation'),{i:R.nobs}],
+      [tr('จำนวนตัวแปรเครื่องมือทั้งหมด','Total instruments'),{i:R.L}],[tr('GMM-style (lag ของ y)','GMM-style (lags of y)'),{i:R.q}],[tr('IV-style (ΔX)','IV-style (ΔX)'),{i:R.L-R.q}],
+      [tr('lag สูงสุดของ instrument','Max instrument lag'),R.maxLag?String(R.maxLag):tr('ทั้งหมด','All')],['Collapse',R.collapse?tr('ใช่','Yes'):tr('ไม่','No')],
+      [tr('สมการที่ประมาณ','Estimated equation'),`Δ${R.yv}ᵢₜ = α·Δ${R.yv}ᵢ,ₜ₋₁ + ${R.xv.map(x=>'β·Δ'+x).join(' + ')} + Δεᵢₜ`]],
+    notes:[[tr('แนวคิด','Idea'),tr('การหาผลต่างอันดับหนึ่งขจัด αᵢ ออก แต่ Δyᵢ,ₜ₋₁ สัมพันธ์กับ Δεᵢₜ จึงใช้ yᵢ,ₜ₋₂, yᵢ,ₜ₋₃, … เป็นตัวแปรเครื่องมือ (Arellano & Bond, 1991)','First-differencing removes αᵢ, but Δyᵢ,ₜ₋₁ is correlated with Δεᵢₜ, so yᵢ,ₜ₋₂, yᵢ,ₜ₋₃, … serve as instruments (Arellano & Bond, 1991).')],
+      [tr('กฎทั่วไป','Rule of thumb'),tr('จำนวน instruments ไม่ควรเกินจำนวนหน่วย (N) มิฉะนั้น Hansen test จะอ่อนแอและค่าประมาณเอนเอียงไปทาง OLS/FE','Instrument count should not exceed N, otherwise the Hansen test weakens and estimates drift towards OLS/FE.')]],
+    interp:R.L>R.N?[tr('จำนวน instruments มากกว่าจำนวนหน่วย แนะนำให้จำกัด lag สูงสุดหรือเลือก Collapse','More instruments than units — limit the maximum lag or tick Collapse.')]:[]});
+  T.push({sheet:'One-step GMM',title:tr('One-step Difference GMM (robust SE)','One-step difference GMM (robust SE)'),sub:tr('ใช้เมทริกซ์ถ่วงน้ำหนัก (Σ Zᵢ′HZᵢ)⁻¹','Weighting matrix (Σ Zᵢ′HZᵢ)⁻¹'),headers:coefHeaders('z'),rows:coefTable(R.names,R.one.b,R.one.se,'z',Infinity),notes:coefNotes('z',true),interp:[]});
+  T.push({sheet:'Two-step GMM',title:tr('Two-step Difference GMM (Windmeijer-corrected SE)','Two-step difference GMM (Windmeijer-corrected SE)'),sub:tr('แบบจำลองหลักที่ใช้ตีความ — เมทริกซ์ถ่วงน้ำหนักที่เหมาะสมจากส่วนเหลือของ one-step','Main model for interpretation — optimal weighting matrix from one-step residuals'),
+    headers:coefHeaders('z'),rows:coefTable(R.names,R.two.b,R.two.se,'z',Infinity),
+    notes:[...coefNotes('z',false),['Windmeijer',tr('ค่า Std. Err. ของ two-step แบบปกติต่ำเกินจริงในตัวอย่างขนาดเล็ก จึงใช้การปรับแก้ของ Windmeijer (2005)','Conventional two-step standard errors are badly downward-biased in small samples, so the Windmeijer (2005) correction is applied.')],
+      [`L1.${R.yv}`,tr('ค่าสัมประสิทธิ์ α ของตัวแปรตามในอดีต วัดความต่อเนื่อง (persistence) ของ Y; 0 < α < 1 = มีการปรับตัวเข้าสู่ดุลยภาพ','α on the lagged dependent variable measures persistence of Y; 0 < α < 1 means gradual adjustment to equilibrium.')]],
+    interp:sigInterp(R.names,R.two.b,R.two.se,'z',Infinity,false)});
+  const dg=[[tr('Arellano–Bond AR(1)','Arellano–Bond AR(1)'),R.ar1.stat,'N(0,1)',{p:R.ar1.p},tr('ไม่มีสหสัมพันธ์อันดับ 1 ใน Δε','No 1st-order autocorrelation in Δε'),decide(R.ar1.p,tr('ปฏิเสธ (คาดไว้แล้ว — ปกติ)','Reject (expected — fine)'),tr('ไม่ปฏิเสธ','Do not reject'))],
+    [tr('Arellano–Bond AR(2)','Arellano–Bond AR(2)'),R.ar2.stat,'N(0,1)',{p:R.ar2.p},tr('ไม่มีสหสัมพันธ์อันดับ 2 ใน Δε','No 2nd-order autocorrelation in Δε'),decide(R.ar2.p,tr('ปฏิเสธ → instruments ไม่ถูกต้อง','Reject → instruments invalid'),tr('ไม่ปฏิเสธ → ดี','Do not reject → good'))],
+    ['Sargan',R.sargan.stat,`χ²(${R.sargan.df})`,{p:R.sargan.p},tr('ตัวแปรเครื่องมือทั้งหมดใช้ได้ (overid.)','All instruments valid (overid.)'),decide(R.sargan.p,tr('ปฏิเสธ','Reject'),tr('ไม่ปฏิเสธ → ดี','Do not reject → good'))],
+    ['Hansen J',R.hansen.stat,`χ²(${R.hansen.df})`,{p:R.hansen.p},tr('ตัวแปรเครื่องมือทั้งหมดใช้ได้ (overid.)','All instruments valid (overid.)'),decide(R.hansen.p,tr('ปฏิเสธ → instruments ไม่ถูกต้อง','Reject → instruments invalid'),R.hansen.p>0.99?tr('p ≈ 1 อาจเกิดจาก instruments มากเกินไป','p ≈ 1 may signal too many instruments'):tr('ไม่ปฏิเสธ → ดี','Do not reject → good'))],
+    [tr('Wald χ² (one-step)','Wald χ² (one-step)'),R.one.wald,`χ²(${p})`,{p:R.one.waldP},tr('สัมประสิทธิ์ทั้งหมด = 0','All coefficients = 0'),decide(R.one.waldP,tr('ปฏิเสธ → แบบจำลองมีนัยสำคัญ','Reject → model significant'),tr('ไม่ปฏิเสธ','Do not reject'))],
+    [tr('Wald χ² (two-step)','Wald χ² (two-step)'),R.two.wald,`χ²(${p})`,{p:R.two.waldP},tr('สัมประสิทธิ์ทั้งหมด = 0','All coefficients = 0'),decide(R.two.waldP,tr('ปฏิเสธ → แบบจำลองมีนัยสำคัญ','Reject → model significant'),tr('ไม่ปฏิเสธ','Do not reject'))]];
+  T.push({sheet:'Diagnostics',title:tr('การทดสอบวินิจฉัยแบบจำลอง GMM','GMM specification tests'),headers:[tr('การทดสอบ','Test'),tr('ค่าสถิติ','Statistic'),tr('การแจกแจง','Distribution'),'P-value','H₀',tr('ผลสรุป','Conclusion')],txtCols:[4,5],rows:dg,
+    notes:[['AR(1)',tr('Δεᵢₜ มีสหสัมพันธ์อันดับหนึ่งโดยธรรมชาติ (เพราะ Δεᵢₜ และ Δεᵢ,ₜ₋₁ มี εᵢ,ₜ₋₁ ร่วมกัน) การปฏิเสธ H₀ จึงเป็นเรื่องปกติ','Δεᵢₜ is first-order correlated by construction (Δεᵢₜ and Δεᵢ,ₜ₋₁ share εᵢ,ₜ₋₁), so rejection is expected.')],
+      ['AR(2)',tr('ต้องไม่ปฏิเสธ H₀ (p > 0.05) เพื่อให้ yᵢ,ₜ₋₂ เป็นตัวแปรเครื่องมือที่ถูกต้อง','Must not reject (p > 0.05) for yᵢ,ₜ₋₂ to be a valid instrument.')],
+      ['Sargan',tr('ทดสอบ overidentifying restrictions จาก one-step ใช้ได้ภายใต้ homoskedasticity เท่านั้น','Overidentification test from one-step; valid only under homoskedasticity.')],
+      ['Hansen J',tr('ทดสอบ overidentifying restrictions จาก two-step ทนต่อ heteroskedasticity ต้องการ p > 0.05 แต่ไม่ควรใกล้ 1 มากเกินไป','Overidentification test from two-step, robust to heteroskedasticity; want p > 0.05 but not too close to 1.')],
+      ['Wald χ²',tr('ทดสอบนัยสำคัญร่วมของค่าสัมประสิทธิ์ทั้งหมด','Joint significance of all coefficients.')]],interp:[]});
+  const a1=R.one.b[0],a2=R.two.b[0],ao=R.ols.b[0],af=R.fe.b[0];const lo=Math.min(ao,af),hi=Math.max(ao,af);
+  T.push({sheet:'Bias bounds',title:tr('ตรวจสอบช่วงของ α (Bond, 2002)','Bounds check on α (Bond, 2002)'),headers:[tr('ตัวประมาณ','Estimator'),`α (L1.${R.yv})`,...R.xv,tr('ทิศทางความเอนเอียงที่ทราบ','Known bias direction')],txtCols:[R.xv.length+2],
+    rows:[['Pooled OLS (levels)',ao,...R.ols.b.slice(1),tr('เอนเอียงขึ้น (upward)','Upward')],['Fixed Effects (within)',af,...R.fe.b.slice(1),tr('เอนเอียงลง (Nickell bias)','Downward (Nickell bias)')],
+      ['GMM one-step',a1,...R.one.b.slice(1),a1>lo&&a1<hi?tr('อยู่ในช่วง ✓','Within bounds ✓'):tr('อยู่นอกช่วง ✗','Outside bounds ✗')],['GMM two-step',a2,...R.two.b.slice(1),a2>lo&&a2<hi?tr('อยู่ในช่วง ✓','Within bounds ✓'):tr('อยู่นอกช่วง ✗','Outside bounds ✗')]],
+    notes:[[tr('หลักการ','Principle'),tr('OLS ให้ค่า α สูงเกินจริงเพราะ yᵢ,ₜ₋₁ สัมพันธ์กับ αᵢ ส่วน FE ให้ค่าต่ำเกินจริงเมื่อ T สั้น ค่า GMM ที่น่าเชื่อถือควรอยู่ระหว่างสองค่านี้','OLS overstates α because yᵢ,ₜ₋₁ is correlated with αᵢ; FE understates it when T is short. A credible GMM estimate lies between the two.')]],interp:[]});
+  T.push({sheet:'Long-run effects',title:tr('ผลกระทบระยะยาว (Long-run multipliers)','Long-run effects (multipliers)'),headers:[tr('ตัวแปร','Variable'),tr('ผลระยะสั้น β','Short-run β'),tr('ผลระยะยาว β/(1−α)','Long-run β/(1−α)'),'Std. Err. (delta)','z','P>|z|','Sig.'],
+    rows:R.lr.map((l,j)=>{const z=l.val/l.se;const pp=2*(1-Eng.normCdf(Math.abs(z)));return [l.x,R.two.b[1+j],l.val,l.se,z,{p:pp},stars(pp)];}),
+    notes:[[tr('ผลระยะยาว','Long-run'),tr('ผลรวมสะสมเมื่อระบบปรับตัวเข้าสู่ดุลยภาพแล้ว = β/(1−α) ใช้ได้เมื่อ |α| < 1; Std. Err. คำนวณด้วยวิธี delta method จาก two-step','Cumulative effect once the system reaches equilibrium = β/(1−α), valid when |α| < 1; delta-method standard errors from the two-step model.')]],interp:[]});
+  return T;}
+
+function tablesUnit(R){const T=[];const tests=[['HT','Harris–Tzavalis','z'],['IPS','Im–Pesaran–Shin W̄','W'],['FADF','Fisher-ADF (Maddala–Wu)','χ²'],['CHOI','Choi Z (inverse normal)','Z']];
+  const urRows=lv=>R.vars.flatMap(v=>tests.map(([k,nm,sym])=>{const r=lv[v][k];return [v,nm,r.stat,k==='FADF'?`χ²(${r.df})`:'N(0,1)',{p:r.p},decide(r.p,tr('ปฏิเสธ H₀ → นิ่ง','Reject H₀ → stationary'),tr('ไม่ปฏิเสธ → มี unit root','Do not reject → unit root'))];}));
+  const urNotes=[['H₀',tr('ทุกหน่วยมี unit root (ไม่นิ่ง) — ปฏิเสธ H₀ เมื่อ p < 0.05 แสดงว่าข้อมูลนิ่ง','All panels contain a unit root (non-stationary); p < 0.05 rejects H₀, i.e. the data are stationary.')],
+    ['Harris–Tzavalis',tr('ทดสอบจาก ρ̂ ของสมการ pooled แบบ fixed effects ออกแบบมาสำหรับ T สั้น สมมติ ρ เท่ากันทุกหน่วย','Based on pooled FE ρ̂, designed for short T; assumes a common ρ across units.')],
+    ['IPS W̄',tr('ค่าเฉลี่ยของสถิติ DF รายหน่วย (t̄) ปรับมาตรฐานด้วย E[t] และ Var[t] ของ Im, Pesaran & Shin (2003) อนุญาตให้ ρᵢ ต่างกันได้','Average of unit-level DF t-statistics (t̄), standardised with IPS (2003) moments; allows heterogeneous ρᵢ.')],
+    ['Fisher-ADF',tr(`P = −2Σ ln(pᵢ) รวม p-value ของ ADF รายหน่วย (MacKinnon) แจกแจงแบบ χ²(2N) ใช้ lag = ${R.lags}`,`P = −2Σ ln(pᵢ), combining unit-level ADF p-values (MacKinnon); χ²(2N); lag = ${R.lags}.`)],
+    ['Choi Z',tr('Z = Σ Φ⁻¹(pᵢ)/√N ค่าลบมากแสดงว่าปฏิเสธ H₀','Z = Σ Φ⁻¹(pᵢ)/√N; large negative values reject H₀.')],
+    [tr('รูปแบบ','Specification'),tr('ทุกการทดสอบรวมค่าคงที่เฉพาะหน่วย ไม่มีแนวโน้มเวลา','All tests include unit-specific intercepts, no time trend.')]];
+  T.push({sheet:'UR levels',title:tr('Panel Unit Root Test — ระดับ Level','Panel unit root tests — levels'),sub:tr(`N = ${R.N} หน่วย · T = ${R.T} ช่วงเวลา`,`N = ${R.N} units · T = ${R.T} periods`),
+    headers:[tr('ตัวแปร','Variable'),tr('การทดสอบ','Test'),tr('ค่าสถิติ','Statistic'),tr('การแจกแจง','Distribution'),'P-value',tr('ผลสรุป (α = 0.05)','Decision (α = 0.05)')],txtCols:[1,5],rows:urRows(R.level),notes:urNotes,interp:[]});
+  T.push({sheet:'UR first diff',title:tr('Panel Unit Root Test — ผลต่างอันดับหนึ่ง (First difference)','Panel unit root tests — first differences'),
+    headers:[tr('ตัวแปร','Variable'),tr('การทดสอบ','Test'),tr('ค่าสถิติ','Statistic'),tr('การแจกแจง','Distribution'),'P-value',tr('ผลสรุป (α = 0.05)','Decision (α = 0.05)')],txtCols:[1,5],rows:urRows(R.diff),
+    notes:[['Δ',tr('ถ้าตัวแปรไม่นิ่งที่ level แต่นิ่งที่ first difference แสดงว่าเป็น I(1) ซึ่งเป็นเงื่อนไขของการทดสอบ cointegration','A variable that is non-stationary in levels but stationary in differences is I(1), the precondition for cointegration testing.')]],interp:[]});
+  T.push({sheet:'Integration order',title:tr('สรุปลำดับความนิ่ง (Order of integration)','Order of integration summary'),headers:[tr('ตัวแปร','Variable'),tr('จำนวนการทดสอบที่ปฏิเสธ H₀ (Level)','Tests rejecting H₀ (level)'),tr('จำนวนการทดสอบที่ปฏิเสธ H₀ (Δ)','Tests rejecting H₀ (diff.)'),tr('ข้อสรุป','Conclusion')],txtCols:[3],
+    rows:R.vars.map(v=>[v,`${R.order[v].rl} / 4`,`${R.order[v].rd} / 4`,ordLabel(R.order[v].ord)]),
+    notes:[[tr('เกณฑ์','Rule'),tr('สรุปเป็น I(0) เมื่อการทดสอบอย่างน้อย 3 ใน 4 ปฏิเสธ H₀ ที่ level; เป็น I(1) เมื่อไม่ผ่านที่ level แต่อย่างน้อย 3 ใน 4 ปฏิเสธที่ first difference','I(0) if at least 3 of 4 tests reject H₀ in levels; I(1) if not, but at least 3 of 4 reject in first differences.')]],
+    interp:R.vars.every(v=>R.order[v].ord==='I(1)')?[tr('ทุกตัวแปรเป็น I(1) จึงเหมาะสมที่จะทดสอบ cointegration','All variables are I(1), so a cointegration test is appropriate.')]:[]});
+  const ind=R.level[R.yv].indiv;
+  T.push({sheet:'Individual ADF',title:tr(`ผลการทดสอบรายหน่วยของ ${R.yv} (Level)`,`Unit-level tests for ${R.yv} (levels)`),headers:['ID',tr('t-stat DF (lag 0)','DF t-stat (lag 0)'),`t-stat ADF (lag ${R.lags})`,tr('MacKinnon p-value','MacKinnon p-value'),tr('ผล (5%)','Result (5%)')],txtCols:[4],
+    rows:R.B.groups.map((g,i)=>[g.id,ind.tDF[i],ind.tADF[i],{p:ind.p[i]},ind.p[i]<0.05?tr('นิ่ง','Stationary'):tr('มี unit root','Unit root')]),
+    notes:[['t-stat',tr('สถิติ Dickey–Fuller ของแต่ละหน่วย ค่าวิกฤต 5% ≈ −2.86 (มีค่าคงที่)','Dickey–Fuller statistic per unit; 5% critical value ≈ −2.86 (with intercept).')],['MacKinnon p',tr('p-value โดยประมาณจาก response surface ของ MacKinnon (1994)','Approximate p-value from the MacKinnon (1994) response surface.')]],interp:[]});
+  if(R.kao){const K=R.kao;T.push({sheet:'Kao cointegration',title:tr('Kao (1999) Residual-based Panel Cointegration Test','Kao (1999) residual-based panel cointegration test'),
+      sub:tr(`ส่วนเหลือจากสมการ ${R.yv} = αᵢ + ${R.xv.join(' + ')} · ρ̂ = ${fmt(K.rho)} · bandwidth = ${K.bw} · ADF lag = ${K.adfLags}`,`Residuals from ${R.yv} = αᵢ + ${R.xv.join(' + ')} · ρ̂ = ${fmt(K.rho)} · bandwidth = ${K.bw} · ADF lag = ${K.adfLags}`),
+      headers:[tr('สถิติ','Statistic'),tr('ค่าสถิติ','Value'),'P-value',tr('ผลสรุป (α = 0.05)','Decision (α = 0.05)')],txtCols:[3],
+      rows:K.stats.map(s=>[s.name,s.stat,{p:s.p},decide(s.p,tr('ปฏิเสธ H₀ → มี cointegration','Reject H₀ → cointegrated'),tr('ไม่ปฏิเสธ H₀','Do not reject H₀'))]),
+      notes:[['H₀',tr('ไม่มี cointegration (ส่วนเหลือมี unit root) ทุกสถิติแจกแจงแบบปกติมาตรฐาน ทดสอบด้านซ้าย','No cointegration (residuals have a unit root); all statistics are standard normal, left-tailed.')],
+        ['DF_ρ, DF_t',tr('สมมติว่า X เป็นตัวแปรภายนอกอย่างเคร่งครัด','Assume strictly exogenous regressors.')],
+        ['DF*_ρ, DF*_t',tr('ปรับแก้ด้วยความแปรปรวนระยะยาว (σ²ᵥ, σ²₀ᵥ) อนุญาตให้ X เป็นตัวแปรภายในได้','Corrected with long-run variances (σ²ᵥ, σ²₀ᵥ); allow endogenous regressors.')],
+        ['ADF',tr('เพิ่ม lag ของ Δê เพื่อแก้ปัญหา serial correlation เป็นสถิติที่นิยมรายงานมากที่สุด','Adds lagged Δê to handle serial correlation; the most commonly reported statistic.')]],interp:[]});
+    const rows=R.xv.map((x,j)=>{const r=[x,K.feB[j]];if(R.dols){const b=R.dols.b[j],s=R.dols.se[j],z=b/s,pp=2*(1-Eng.normCdf(Math.abs(z)));r.push(b,s,z,{p:pp},stars(pp));}else r.push(null,null,null,null,'');return r;});
+    T.push({sheet:'Long-run coef',title:tr('ค่าสัมประสิทธิ์ระยะยาว (Cointegrating vector)','Long-run coefficients (cointegrating vector)'),headers:[tr('ตัวแปร','Variable'),tr('FE แบบ static','Static FE'),'Panel DOLS','Std. Err.','z','P>|z|','Sig.'],rows,
+      notes:[[tr('FE แบบ static','Static FE'),tr('ค่าประมาณแบบ super-consistent แต่มีความเอนเอียงในตัวอย่างจำกัด และค่า Std. Err. ใช้อนุมานไม่ได้','Super-consistent but biased in finite samples; its standard errors are not valid for inference.')],
+        ['Panel DOLS',tr('เพิ่ม ΔX ช่วง lead 1, ปัจจุบัน และ lag 1 เพื่อขจัดปัญหาตัวแปรภายในและ serial correlation (Kao & Chiang, 2000) Std. Err. ปรับด้วยความแปรปรวนระยะยาว','Adds lead, current and lagged ΔX to remove endogeneity and serial-correlation bias (Kao & Chiang, 2000); SEs scaled by the long-run variance.')]],
+      interp:R.dols?sigInterp(R.xv,R.dols.b,R.dols.se,'z',Infinity,false).map(s=>tr('ระยะยาว: ','Long run: ')+s):[]});}
+  return T;}
+
+/* ---------- Excel export ---------- */
+$('#btnXlsx').addEventListener('click',()=>{if(!S.res)return;const wb=XLSX.utils.book_new();const used=new Set();
+  buildTables().forEach((t,i)=>{const aoa=[[t.title]];if(t.sub)aoa.push([t.sub]);aoa.push([]);aoa.push(t.headers);t.rows.forEach(r=>aoa.push(r.map(cellX)));
+    if(t.notes&&t.notes.length){aoa.push([]);aoa.push([tr('คำอธิบายค่าสถิติ','What the statistics mean')]);t.notes.forEach(n=>aoa.push([n[0],n[1]]));}
+    if(t.interp&&t.interp.length){aoa.push([]);aoa.push([tr('การตีความ','Interpretation')]);t.interp.forEach(s=>aoa.push([s]));}
+    const ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=t.headers.map((_,j)=>({wch:j===0?24:16}));
+    let nm=`${i+1} ${t.sheet}`.slice(0,31);while(used.has(nm))nm=nm.slice(0,29)+'_'+i;used.add(nm);XLSX.utils.book_append_sheet(wb,ws,nm);});
+  XLSX.writeFile(wb,`panel_results_${S.res.method}.xlsx`);});
+
+/* ---------- charts ---------- */
+const PAL=['#1f4e79','#b5562c','#2e7d5b','#7b4fa0','#c79a1e','#3a8fb7','#a33b5c','#5b6b2f','#d17a3a','#4a5568','#0f766e','#9d174d'];
+const bgPlugin={id:'bgWhite',beforeDraw(c){const x=c.ctx;x.save();x.globalCompositeOperation='destination-over';x.fillStyle='#ffffff';x.fillRect(0,0,c.width,c.height);x.restore();}};
+function destroyCharts(){S.charts.forEach(c=>c.destroy());S.charts=[];}
+function baseOpts(xTitle,yTitle,extra={}){return Object.assign({responsive:true,maintainAspectRatio:false,animation:{duration:400},
+  plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{family:'IBM Plex Sans Thai',size:11}}},tooltip:{titleFont:{family:'IBM Plex Sans Thai'},bodyFont:{family:'IBM Plex Mono'}}},
+  scales:{x:{title:{display:!!xTitle,text:xTitle},grid:{color:'#eeebe4'}},y:{title:{display:!!yTitle,text:yTitle},grid:{color:'#eeebe4'}}}},extra);}
+function refLine(labels,val,label,color='#7d8596'){return {type:'line',label,data:labels.map(()=>val),borderColor:color,borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false};}
+function histogram(data,label,color){const n=data.length;const mn=Math.min(...data),mx=Math.max(...data);const k=Math.max(8,Math.min(30,Math.ceil(Math.sqrt(n))));const w=(mx-mn)/k||1;
+  const cnt=new Array(k).fill(0);data.forEach(v=>{let i=Math.floor((v-mn)/w);if(i>=k)i=k-1;if(i<0)i=0;cnt[i]++;});const mids=cnt.map((_,i)=>mn+w*(i+0.5));
+  const m=Eng.mean(data),s=Eng.sd(data);const dens=mids.map(x=>n*w*Math.exp(-0.5*((x-m)/s)**2)/(s*Math.sqrt(2*Math.PI)));
+  return {type:'bar',data:{labels:mids.map(x=>fmt(x,2)),datasets:[{type:'bar',label,data:cnt,backgroundColor:color+'99',borderColor:color,borderWidth:1,barPercentage:1,categoryPercentage:1},{type:'line',label:tr('การแจกแจงปกติ','Normal curve'),data:dens,borderColor:'#b5562c',pointRadius:0,tension:.35,borderWidth:2}]},
+    options:baseOpts(label,tr('ความถี่','Frequency'))};}
+function qqPlot(data,color){const s=[...data].sort((a,b)=>a-b);const m=Eng.mean(s),sd=Eng.sd(s);const n=s.length;const pts=s.map((v,i)=>({x:Eng.normInv((i+0.5)/n),y:(v-m)/sd}));
+  const lo=Math.min(pts[0].x,pts[0].y),hi=Math.max(pts[n-1].x,pts[n-1].y);
+  return {type:'scatter',data:{datasets:[{label:tr('ส่วนเหลือมาตรฐาน','Standardised residuals'),data:pts,backgroundColor:color+'aa',pointRadius:3},{type:'line',label:'45°',data:[{x:lo,y:lo},{x:hi,y:hi}],borderColor:'#b5562c',pointRadius:0,borderWidth:2}]},
+    options:baseOpts(tr('ควอนไทล์ทางทฤษฎี (ปกติ)','Theoretical quantiles (normal)'),tr('ควอนไทล์ของตัวอย่าง','Sample quantiles'))};}
+function scatter45(x,y,xl,yl,color){const pts=x.map((v,i)=>({x:v,y:y[i]}));const lo=Math.min(...x,...y),hi=Math.max(...x,...y);
+  return {type:'scatter',data:{datasets:[{label:tr('ค่าสังเกต','Observations'),data:pts,backgroundColor:color+'99',pointRadius:3},{type:'line',label:'45°',data:[{x:lo,y:lo},{x:hi,y:hi}],borderColor:'#b5562c',pointRadius:0,borderWidth:2}]},options:baseOpts(xl,yl)};}
+function linesByEntity(groups,v,labels,title,maxN=12){const ds=groups.slice(0,maxN).map((g,i)=>({label:String(g.id),data:labels.map((_,t)=>g.v[v][t]),borderColor:PAL[i%PAL.length],backgroundColor:PAL[i%PAL.length],pointRadius:0,borderWidth:1.6,tension:.2}));
+  return {type:'line',data:{labels,datasets:ds},options:baseOpts(tr('ช่วงเวลา','Period'),title)};}
+function coefCI(names,b,se,color,crit=1.959964){const lo=b.map((v,i)=>v-crit*se[i]),hi=b.map((v,i)=>v+crit*se[i]);
+  return {type:'bar',data:{labels:names,datasets:[{type:'bar',label:'95% CI',data:names.map((_,i)=>isFinite(se[i])?[lo[i],hi[i]]:null),backgroundColor:color+'40',borderColor:color,borderWidth:1.2,barPercentage:.4},
+    {type:'line',label:tr('ค่าสัมประสิทธิ์','Coefficient'),data:b,showLine:false,pointRadius:7,pointStyle:'rectRot',pointBackgroundColor:color,borderColor:color},refLine(names,0,'0')]},options:baseOpts('',tr('ค่าสัมประสิทธิ์','Coefficient'))};}
+function groupedBar(labels,series,yTitle,extraDs=[]){return {type:'bar',data:{labels,datasets:[...series.map((s,i)=>({type:'bar',label:s.label,data:s.data,backgroundColor:(s.color||PAL[i%PAL.length])+'cc',borderColor:s.color||PAL[i%PAL.length],borderWidth:1})),...extraDs]},options:baseOpts('',yTitle)};}
+
+function buildCharts(){const R=S.res;const C=[];
+  if(R.method==='fere'){const P=R.P;const lab=R.tlabels;const xv=R.xv;
+    C.push({t:tr('เปรียบเทียบค่าสัมประสิทธิ์: Pooled, FEM, REM','Coefficients: Pooled vs FEM vs REM'),d:tr('ความแตกต่างระหว่าง FEM กับ REM สะท้อนความสัมพันธ์ระหว่าง uᵢ กับ X','Gaps between FEM and REM reflect correlation between uᵢ and X'),
+      c:groupedBar(xv,[{label:'Pooled OLS',data:R.pooled.b.slice(1)},{label:'FEM',data:R.FE.b.slice(1)},...(R.RE?[{label:'REM',data:R.RE.b.slice(1)}]:[])],tr('ค่าสัมประสิทธิ์','Coefficient'))});
+    C.push({t:tr('ค่าสัมประสิทธิ์ FEM และช่วงความเชื่อมั่น 95%','FEM coefficients with 95% CI'),d:tr('ถ้าช่วงไม่คร่อมเส้นศูนย์ = มีนัยสำคัญ','Intervals not crossing zero are significant'),c:coefCI(xv,R.FE.b.slice(1),R.FE.se.slice(1),PAL[0],Eng.tCrit(R.FE.df))});
+    if(R.RE)C.push({t:tr('ค่าสัมประสิทธิ์ REM และช่วงความเชื่อมั่น 95%','REM coefficients with 95% CI'),d:tr('ช่วงความเชื่อมั่นแบบ z','z-based intervals'),c:coefCI(xv,R.RE.b.slice(1),R.RE.se.slice(1),PAL[2])});
+    const ord=R.ids.map((id,i)=>({id,a:R.FE.alpha[i]})).sort((a,b)=>a.a-b.a);
+    C.push({t:tr('ผลกระทบเฉพาะตัว αᵢ (เรียงจากน้อยไปมาก)','Individual effects αᵢ (sorted)'),d:tr('ความแตกต่างของระดับ Y ระหว่างหน่วยที่ไม่อธิบายด้วย X','Differences in Y levels across units not explained by X'),
+      c:{type:'bar',data:{labels:ord.map(o=>o.id),datasets:[{label:'αᵢ',data:ord.map(o=>o.a),backgroundColor:ord.map(o=>o.a>=R.FE.b[0]?PAL[0]+'cc':PAL[1]+'cc')},refLine(ord.map(o=>o.id),R.FE.b[0],tr('ค่าเฉลี่ย αᵢ','Mean αᵢ'),'#1c2331')]},options:baseOpts('ID','αᵢ')}});
+    C.push({t:tr('ค่าจริงเทียบค่าพยากรณ์ (FEM)','Actual vs fitted (FEM)'),d:tr('จุดยิ่งใกล้เส้น 45° ยิ่งพยากรณ์ได้ดี','Closer to the 45° line = better fit'),c:scatter45(R.FE.fit,R.Y,tr('ค่าพยากรณ์','Fitted'),tr('ค่าจริง','Actual'),PAL[0])});
+    C.push({t:tr('ส่วนเหลือเทียบค่าพยากรณ์ (FEM)','Residuals vs fitted (FEM)'),d:tr('ควรกระจายแบบสุ่มรอบศูนย์ ถ้าเป็นรูปกรวยอาจมี heteroskedasticity','Should scatter randomly around zero; a funnel suggests heteroskedasticity'),
+      c:{type:'scatter',data:{datasets:[{label:tr('ส่วนเหลือ','Residuals'),data:R.FE.fit.map((f,i)=>({x:f,y:R.FE.e[i]})),backgroundColor:PAL[3]+'99',pointRadius:3},{type:'line',label:'0',data:[{x:Math.min(...R.FE.fit),y:0},{x:Math.max(...R.FE.fit),y:0}],borderColor:'#b5562c',borderDash:[6,4],pointRadius:0}]},options:baseOpts(tr('ค่าพยากรณ์','Fitted'),tr('ส่วนเหลือ','Residual'))}});
+    C.push({t:tr('ฮิสโทแกรมของส่วนเหลือ (FEM)','Residual histogram (FEM)'),d:tr('เปรียบเทียบกับเส้นโค้งการแจกแจงปกติ','Compared with a normal curve'),c:histogram(R.FE.e,tr('ส่วนเหลือ','Residual'),PAL[0])});
+    C.push({t:tr('Normal Q-Q Plot ของส่วนเหลือ (FEM)','Normal Q-Q plot of residuals (FEM)'),d:tr('จุดเรียงบนเส้น 45° = ส่วนเหลือใกล้เคียงการแจกแจงปกติ','Points on the 45° line = approximately normal residuals'),c:qqPlot(R.FE.e,PAL[2])});
+    C.push({t:tr(`${R.yv} ตามช่วงเวลา รายหน่วย (สูงสุด 12 หน่วย)`,`${R.yv} over time by unit (up to 12)`),d:tr('ระดับที่ต่างกันระหว่างเส้น = ความแตกต่างเฉพาะตัว','Different line levels = individual heterogeneity'),c:linesByEntity(P.groups.filter(g=>g.t.length===P.times.length).length?P.groups.filter(g=>g.t.length===P.times.length):P.groups,R.yv,lab,R.yv)});
+    C.push({t:tr('องค์ประกอบความแปรปรวน: Between vs Within','Variance decomposition: between vs within'),d:tr('FEM ใช้เฉพาะความแปรปรวนแบบ within','FEM uses only within variation'),
+      c:groupedBar(R.desc.map(d=>d.v),[{label:'SD overall',data:R.desc.map(d=>d.sd)},{label:'SD between',data:R.desc.map(d=>d.between)},{label:'SD within',data:R.desc.map(d=>d.within)}],'SD')});
+    const tl=['F-test','BP LM',...(R.haus?['Hausman']:[])];
+    C.push({t:tr('p-value ของการทดสอบเลือกแบบจำลอง','p-values of model selection tests'),d:tr('แท่งต่ำกว่าเส้น 0.05 = ปฏิเสธ H₀','Bars below 0.05 = reject H₀'),
+      c:groupedBar(tl,[{label:'p-value',data:[R.FE.Fup,R.bp.p,...(R.haus?[R.haus.p]:[])],color:PAL[0]}],'p-value',[refLine(tl,0.05,'α = 0.05','#a33b3b')])});}
+  else if(R.method==='gmm'){const B=R.B;const lab=R.tlabels.slice(0,R.T);const nm=R.cleanNames;
+    C.push({t:tr('เปรียบเทียบค่าสัมประสิทธิ์: OLS, FE, GMM','Coefficients: OLS vs FE vs GMM'),d:tr('ค่า GMM ของ α ควรอยู่ระหว่าง OLS (สูงเกิน) และ FE (ต่ำเกิน)','GMM α should lie between OLS (too high) and FE (too low)'),
+      c:groupedBar(nm,[{label:'Pooled OLS',data:R.ols.b},{label:'FE',data:R.fe.b},{label:'GMM one-step',data:R.one.b},{label:'GMM two-step',data:R.two.b}],tr('ค่าสัมประสิทธิ์','Coefficient'))});
+    C.push({t:tr(`ช่วงของ α (สัมประสิทธิ์ L.${R.yv})`,`Bounds on α (coefficient on L.${R.yv})`),d:tr('การตรวจสอบตาม Bond (2002)','Bond (2002) bounds check'),
+      c:{type:'bar',data:{labels:['FE (lower)','GMM 1-step','GMM 2-step','OLS (upper)'],datasets:[{label:'α',data:[R.fe.b[0],R.one.b[0],R.two.b[0],R.ols.b[0]],backgroundColor:[PAL[1]+'cc',PAL[0]+'cc',PAL[2]+'cc',PAL[1]+'cc']}]},options:baseOpts('','α')}});
+    C.push({t:tr('ค่าสัมประสิทธิ์ two-step GMM และช่วงความเชื่อมั่น 95%','Two-step GMM coefficients with 95% CI'),d:tr('Std. Err. ปรับแก้แบบ Windmeijer','Windmeijer-corrected standard errors'),c:coefCI(R.names,R.two.b,R.two.se,PAL[2])});
+    const dl=['AR(1)','AR(2)','Sargan','Hansen'];
+    C.push({t:tr('p-value ของการทดสอบวินิจฉัย','p-values of diagnostic tests'),d:tr('AR(1) ควรต่ำกว่า 0.05; AR(2), Sargan, Hansen ควรสูงกว่า 0.05','AR(1) should be below 0.05; AR(2), Sargan and Hansen above it'),
+      c:groupedBar(dl,[{label:'p-value',data:[R.ar1.p,R.ar2.p,R.sargan.p,R.hansen.p],color:PAL[3]}],'p-value',[refLine(dl,0.05,'α = 0.05','#a33b3b')])});
+    C.push({t:tr(`Δ${R.yv}: ค่าจริงเทียบค่าพยากรณ์ (two-step)`,`Δ${R.yv}: actual vs fitted (two-step)`),d:tr('สมการผลต่างอันดับหนึ่ง','First-differenced equation'),c:scatter45(R.dyFit,R.dyAct,tr('ค่าพยากรณ์','Fitted'),tr('ค่าจริง','Actual'),PAL[0])});
+    C.push({t:tr('ฮิสโทแกรมของส่วนเหลือ (two-step)','Residual histogram (two-step)'),d:tr('ส่วนเหลือของสมการผลต่าง Δε̂','Differenced residuals Δε̂'),c:histogram(R.res,'Δε̂',PAL[0])});
+    C.push({t:tr('สหสัมพันธ์ของส่วนเหลือ Δε̂ ตาม lag','Autocorrelation of Δε̂ by lag'),d:tr('lag 1 คาดว่าติดลบ (≈ −0.5) lag 2 ขึ้นไปควรใกล้ศูนย์','Lag 1 is expected negative (≈ −0.5); lag 2+ should be near zero'),
+      c:{type:'bar',data:{labels:['lag 1','lag 2','lag 3'],datasets:[{label:'corr',data:R.acf,backgroundColor:R.acf.map((v,i)=>i===0?PAL[1]+'cc':PAL[0]+'cc')},refLine(['lag 1','lag 2','lag 3'],0,'0')]},options:baseOpts('','corr')}});
+    C.push({t:tr(`${R.yv} ตามช่วงเวลา รายหน่วย (สูงสุด 12 หน่วย)`,`${R.yv} over time by unit (up to 12)`),d:tr('แสดงพลวัตและความต่อเนื่องของตัวแปรตาม','Shows dynamics and persistence of Y'),c:linesByEntity(B.groups,R.yv,lab,R.yv)});
+    const pts=[];B.groups.forEach(g=>{for(let t=1;t<R.T;t++)pts.push({x:g.v[R.yv][t-1],y:g.v[R.yv][t]});});
+    C.push({t:tr(`ความต่อเนื่อง: ${R.yv}ₜ เทียบ ${R.yv}ₜ₋₁`,`Persistence: ${R.yv}ₜ vs ${R.yv}ₜ₋₁`),d:tr('ความชันของกลุ่มจุดสะท้อนความต่อเนื่องของ Y (รวมผลของ αᵢ)','Slope of the cloud reflects persistence (including αᵢ)'),
+      c:{type:'scatter',data:{datasets:[{label:'(yₜ₋₁, yₜ)',data:pts,backgroundColor:PAL[5]+'88',pointRadius:2.5}]},options:baseOpts(`${R.yv}ₜ₋₁`,`${R.yv}ₜ`)}});}
+  else{const B=R.B;const lab=R.tlabels.slice(0,R.T);
+    C.push({t:tr(`${R.yv} ตามช่วงเวลา รายหน่วย (Level)`,`${R.yv} over time by unit (levels)`),d:tr('แนวโน้มเคลื่อนที่ไม่กลับสู่ค่าเฉลี่ยบ่งชี้ unit root','Wandering paths that do not revert suggest a unit root'),c:linesByEntity(B.groups,R.yv,lab,R.yv)});
+    const meanSeries=(diff)=>R.vars.map((v,i)=>({label:v,data:(diff?lab.slice(1):lab).map((_,t)=>Eng.mean(B.groups.map(g=>diff?g.v[v][t+1]-g.v[v][t]:g.v[v][t]))),borderColor:PAL[i%PAL.length],backgroundColor:PAL[i%PAL.length],pointRadius:0,borderWidth:2,tension:.2}));
+    C.push({t:tr('ค่าเฉลี่ยภาคตัดขวางตามเวลา (Level)','Cross-sectional means over time (levels)'),d:tr('เปรียบเทียบการเคลื่อนไหวร่วมกันของตัวแปร','Compare how the variables move together'),c:{type:'line',data:{labels:lab,datasets:meanSeries(false)},options:baseOpts(tr('ช่วงเวลา','Period'),tr('ค่าเฉลี่ย','Mean'))}});
+    C.push({t:tr('ค่าเฉลี่ยภาคตัดขวางของผลต่างอันดับหนึ่ง (Δ)','Cross-sectional means of first differences (Δ)'),d:tr('ข้อมูล I(1) จะนิ่งหลังหาผลต่าง','I(1) data become stationary after differencing'),c:{type:'line',data:{labels:lab.slice(1),datasets:meanSeries(true)},options:baseOpts(tr('ช่วงเวลา','Period'),'Δ')}});
+    const tk=[['HT','HT'],['IPS','IPS'],['FADF','Fisher-ADF'],['CHOI','Choi Z']];
+    C.push({t:tr('p-value ของการทดสอบ unit root — Level','Unit root p-values — levels'),d:tr('แท่งสูงกว่า 0.05 = ไม่ปฏิเสธ unit root','Bars above 0.05 = unit root not rejected'),c:groupedBar(R.vars,tk.map(([k,n])=>({label:n,data:R.vars.map(v=>R.level[v][k].p)})),'p-value',[refLine(R.vars,0.05,'α = 0.05','#a33b3b')])});
+    C.push({t:tr('p-value ของการทดสอบ unit root — First difference','Unit root p-values — first differences'),d:tr('แท่งต่ำกว่า 0.05 = นิ่งหลังหาผลต่าง','Bars below 0.05 = stationary after differencing'),c:groupedBar(R.vars,tk.map(([k,n])=>({label:n,data:R.vars.map(v=>R.diff[v][k].p)})),'p-value',[refLine(R.vars,0.05,'α = 0.05','#a33b3b')])});
+    C.push({t:tr('สถิติ IPS W̄: Level เทียบ First difference','IPS W̄: levels vs first differences'),d:tr('ค่าต่ำกว่า −1.645 = ปฏิเสธ unit root ที่ 5%','Below −1.645 = reject unit root at 5%'),
+      c:groupedBar(R.vars,[{label:'Level',data:R.vars.map(v=>R.level[v].IPS.stat)},{label:'Δ',data:R.vars.map(v=>R.diff[v].IPS.stat)}],'W̄',[refLine(R.vars,-1.645,'−1.645','#a33b3b')])});
+    const td=R.level[R.yv].indiv.tDF.filter(isFinite);C.push({t:tr(`การแจกแจงของสถิติ DF รายหน่วย (${R.yv}, level)`,`Distribution of unit-level DF statistics (${R.yv}, levels)`),d:tr('ค่าวิกฤต 5% ≈ −2.86','5% critical value ≈ −2.86'),c:histogram(td,'t (DF)',PAL[3])});
+    if(R.kao){const K=R.kao;const kn=K.stats.map(s=>s.name);
+      C.push({t:tr('สถิติ Kao cointegration','Kao cointegration statistics'),d:tr('ค่าต่ำกว่า −1.645 = ปฏิเสธ H₀ (ไม่มี cointegration)','Below −1.645 = reject H₀ of no cointegration'),
+        c:groupedBar(kn,[{label:tr('ค่าสถิติ','Statistic'),data:K.stats.map(s=>s.stat),color:PAL[2]}],'z',[refLine(kn,-1.645,'−1.645','#a33b3b')])});
+      C.push({t:tr('ส่วนเหลือจากสมการ cointegrating รายหน่วย','Cointegrating residuals by unit'),d:tr('ถ้ามี cointegration ส่วนเหลือควรแกว่งรอบศูนย์อย่างนิ่ง','With cointegration, residuals fluctuate around zero'),
+        c:{type:'line',data:{labels:lab,datasets:K.resid.slice(0,12).map((e,i)=>({label:String(B.groups[i].id),data:e,borderColor:PAL[i%PAL.length],backgroundColor:PAL[i%PAL.length],pointRadius:0,borderWidth:1.4,tension:.2}))},options:baseOpts(tr('ช่วงเวลา','Period'),'ê')}});
+      const ser=[{label:tr('FE แบบ static','Static FE'),data:K.feB}];if(R.dols)ser.push({label:'Panel DOLS',data:R.dols.b});
+      C.push({t:tr('ค่าสัมประสิทธิ์ระยะยาว','Long-run coefficients'),d:tr('เปรียบเทียบ FE แบบ static กับ Panel DOLS','Static FE vs Panel DOLS'),c:groupedBar(R.xv,ser,tr('ค่าสัมประสิทธิ์','Coefficient'))});}}
+  return C;}
+function renderCharts(){destroyCharts();const box=$('#chartsView');const specs=buildCharts();
+  box.innerHTML=specs.map((s,i)=>`<div class="ccard"><div class="ch"><div><h4>${i+1}. ${esc(s.t)}</h4><p>${esc(s.d)}</p></div><button class="btn sm" data-png="${i}">⬇ PNG</button></div><div class="cv"><canvas id="cv${i}"></canvas></div></div>`).join('');
+  specs.forEach((s,i)=>{const ch=new Chart($('#cv'+i),{...s.c,plugins:[bgPlugin]});S.charts.push(ch);});
+  box.querySelectorAll('[data-png]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.png;const a=document.createElement('a');a.href=S.charts[i].toBase64Image('image/png',1);
+    a.download=`${S.res.method}_chart${i+1}_${specs[i].t.replace(/[^\w\u0E00-\u0E7F]+/g,'_').slice(0,40)}.png`;a.click();}));}
+
+/* ---------- reset ---------- */
+function resetAll(){destroyCharts();Object.assign(S,{method:null,rows:null,cols:[],src:'',map:{id:'',time:'',y:'',x:[]},opt:{robust:false,maxLag:0,collapse:false,lags:1,coint:true},res:null,view:'table'});
+  document.querySelectorAll('.mcard').forEach(x=>x.classList.remove('on'));['#step2','#step3','#results','#dataArea'].forEach(s=>$(s).classList.add('hidden'));
+  fileInput.value='';$('#fileName').textContent='';$('#tablesView').innerHTML='';$('#chartsView').innerHTML='';$('#summary').innerHTML='';clearMsg();renderSampleHint();window.scrollTo({top:0,behavior:'smooth'});}
+['#btnResetTop','#btnResetMid','#btnResetBottom'].forEach(s=>$(s).addEventListener('click',resetAll));
+$('#lang-th').addEventListener('click',()=>setLang('th'));$('#lang-en').addEventListener('click',()=>setLang('en'));
+applyI18n();
+</script>
+</body>
+</html>
